@@ -1,7 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "mvn clean install -DskipTests"
+buildCommand = "mvn clean install -DskipTests -Dmaven.resources.skip=true"
 
 [deploy]
 startCommand = "java -jar target/app.jar"
-restartPolicyType = "ON_FAILURE"
