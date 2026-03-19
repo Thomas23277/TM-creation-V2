@@ -52,7 +52,7 @@ public class SecurityConfig {
 
         // ✅ Autorizamos Netlify y Localhost para que puedas seguir probando en ambos
         config.setAllowedOrigins(List.of(
-                "https://charming-sundae-f5d8d7.netlify.app",
+                "https://spontaneous-babka-6d72b4.netlify.app",
                 "http://localhost:5173"
         ));
 
@@ -100,7 +100,7 @@ public class SecurityConfig {
                                 userInfo.userService(customOAuth2UserService)
                         )
                         // ✅ Éxito redirige a Netlify
-                        .defaultSuccessUrl("https://charming-sundae-f5d8d7.netlify.app/", true)
+                        .defaultSuccessUrl("https://spontaneous-babka-6d72b4.netlify.app/", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
