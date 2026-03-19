@@ -7,7 +7,9 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.CategoriaMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -18,20 +20,13 @@ import java.util.List;
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
-
-    // 🔥 CORRECCIÓN: Ya no usamos application.properties para evitar el escape al Disco C:
-    // Forzamos la ruta estrictamente a esta constante.
     private final String UPLOAD_DIR = "uploads/categorias";
 
     public CategoriaServiceImpl(CategoriaRepository categoriaRepository) {
         this.categoriaRepository = categoriaRepository;
     }
 
-    // =====================================================
-    // GUARDAR IMAGEN
-    // =====================================================
     private String guardarImagen(MultipartFile imagen) {
-
         if (imagen == null || imagen.isEmpty()) {
             return null;
         }
@@ -42,29 +37,19 @@ public class CategoriaServiceImpl implements CategoriaService {
                 original = "imagen.jpg";
             }
 
-            // Sanitizar nombre
             String sanitized = original.replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
             String filename = System.currentTimeMillis() + "_" + sanitized;
 
-            // 🔥 CORRECCIÓN CRÍTICA: Anclamos la ruta al directorio raíz del proyecto
             Path basePath = Paths.get(System.getProperty("user.dir"));
             Path uploadPath = basePath.resolve(UPLOAD_DIR).toAbsolutePath().normalize();
 
-            // Crear carpeta si no existe
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
 
             Path filePath = uploadPath.resolve(filename);
-
-            System.out.println("\n==================================================");
-            System.out.println("📁 RUTA EXACTA DEL DISCO DONDE SE GUARDÓ LA IMAGEN:");
-            System.out.println("➡ " + filePath.toString());
-            System.out.println("==================================================\n");
-
             Files.copy(imagen.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Guardamos SOLO la ruta relativa dentro de /uploads
             return "categorias/" + filename;
 
         } catch (IOException e) {
@@ -72,11 +57,7 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
     }
 
-    // =====================================================
-    // ELIMINAR IMAGEN FÍSICA
-    // =====================================================
     private void eliminarImagen(String urlImagen) {
-
         if (urlImagen == null || urlImagen.isBlank()) {
             return;
         }
@@ -90,12 +71,8 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
     }
 
-    // =====================================================
-    // CREATE
-    // =====================================================
     @Override
     public CategoriaDTO save(CategoriaDTO dto, MultipartFile imagen) {
-
         Categoria categoria = CategoriaMapper.toEntity(dto);
         categoria.setDisponible(true);
 
@@ -105,75 +82,70 @@ public class CategoriaServiceImpl implements CategoriaService {
         }
 
         Categoria saved = categoriaRepository.save(categoria);
-
         return CategoriaMapper.toDTO(saved);
     }
 
-    // =====================================================
-    // UPDATE
-    // =====================================================
     @Override
     public CategoriaDTO update(Long id, CategoriaDTO dto, MultipartFile imagen) {
-
         Categoria existente = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
 
         existente.setNombre(dto.getNombre());
 
         String nuevaUrl = guardarImagen(imagen);
-
         if (nuevaUrl != null) {
-
-            // eliminar imagen anterior
             eliminarImagen(existente.getUrlImagen());
-
             existente.setUrlImagen(nuevaUrl);
         }
 
         Categoria updated = categoriaRepository.save(existente);
-
         return CategoriaMapper.toDTO(updated);
     }
 
-    // =====================================================
-    // READ
-    // =====================================================
     @Override
     public CategoriaDTO findById(Long id) {
-
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
-
         return CategoriaMapper.toDTO(categoria);
     }
 
     @Override
     public List<CategoriaDTO> findAll() {
-
+        // 🔥 Removido el filtro para que el Admin pueda ver TODO y gestionarlo
         return categoriaRepository.findAll()
                 .stream()
-                .filter(Categoria::isDisponible)
                 .map(CategoriaMapper::toDTO)
                 .toList();
     }
 
-    // =====================================================
-    // SOFT DELETE + CASCADA LÓGICA
-    // =====================================================
+    // 🔥 BORRADO INTELIGENTE (Smart Delete en Cascada)
     @Override
+    @Transactional
     public void deleteById(Long id) {
-
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
 
-        categoria.setDisponible(false);
+        try {
+            // Intentamos borrar la categoría físicamente
+            categoriaRepository.delete(categoria);
+            categoriaRepository.flush();
 
-        if (categoria.getProductos() != null) {
-            for (Producto producto : categoria.getProductos()) {
-                producto.setDisponible(false);
+            // Si se logró borrar, eliminamos la foto del disco para no ocupar espacio inútil
+            eliminarImagen(categoria.getUrlImagen());
+
+        } catch (DataIntegrityViolationException e) {
+            // Si la BD da error (porque tiene productos asignados), la ocultamos
+            categoria.setDisponible(false);
+
+            // Y ocultamos todos sus productos hijos para que no se sigan vendiendo
+            if (categoria.getProductos() != null) {
+                for (Producto producto : categoria.getProductos()) {
+                    producto.setDisponible(false);
+                }
             }
-        }
+            categoriaRepository.save(categoria);
 
-        categoriaRepository.save(categoria);
+            throw new RuntimeException("Tiene productos asociados. Fue ocultada para proteger los datos.");
+        }
     }
 }

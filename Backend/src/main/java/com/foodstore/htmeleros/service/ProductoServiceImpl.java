@@ -7,6 +7,7 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.ProductoMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 import com.foodstore.htmeleros.repository.ProductoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -61,12 +62,7 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setPrecio(dto.getPrecio());
         producto.setStock(dto.getStock());
         producto.setDescripcion(dto.getDescripcion());
-
-        // 🔥 CORRECCIÓN AQUÍ (Línea 64 de tu imagen):
-        // Usamos getDisponible() porque el DTO ahora es Boolean objeto.
-        // Agregamos un chequeo de nulidad por seguridad.
         producto.setDisponible(dto.getDisponible() != null ? dto.getDisponible() : true);
-
         producto.setCategoria(categoria);
 
         String urlImagen = guardarImagen(imagen);
@@ -80,6 +76,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public List<ProductoDTO> findAll() {
+        // Devolvemos TODO para que el Admin Panel pueda ver y gestionar los ocultos
         return productoRepository.findAll().stream()
                 .map(ProductoMapper::toDTO)
                 .toList();
@@ -92,13 +89,26 @@ public class ProductoServiceImpl implements ProductoService {
         return ProductoMapper.toDTO(producto);
     }
 
+    // 🔥 BORRADO INTELIGENTE (Smart Delete)
     @Override
     @Transactional
     public void deleteById(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
-        producto.setDisponible(false);
-        productoRepository.save(producto);
+
+        try {
+            // 1. Intentamos destruirlo físicamente
+            productoRepository.delete(producto);
+            productoRepository.flush(); // Forzamos la acción para capturar el error ahora mismo
+
+        } catch (DataIntegrityViolationException e) {
+            // 2. Si la BD lo bloquea porque hay pedidos, aplicamos el borrado lógico
+            producto.setDisponible(false);
+            productoRepository.save(producto);
+
+            // Lanzamos una excepción controlada para que el Frontend (tu alert) sepa qué pasó
+            throw new RuntimeException("Tiene pedidos asociados. Fue ocultado (estado: Oculto) para proteger el historial.");
+        }
     }
 
     @Override
@@ -116,7 +126,6 @@ public class ProductoServiceImpl implements ProductoService {
         existente.setStock(dto.getStock());
         existente.setDescripcion(dto.getDescripcion());
 
-        // 🔥 CORRECCIÓN AQUÍ TAMBIÉN:
         if (dto.getDisponible() != null) {
             existente.setDisponible(dto.getDisponible());
         }
