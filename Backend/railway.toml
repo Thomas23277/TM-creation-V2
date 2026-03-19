@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "mvn clean install -DskipTests -Dmaven.resources.filtering.skip=true"
+buildCommand = "mvn clean install -DskipTests"
 
 [deploy]
 startCommand = "java -jar target/app.jar"
