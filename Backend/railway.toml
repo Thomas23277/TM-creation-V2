@@ -1,8 +1,9 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "./mvnw clean install -DskipTests"
+buildCommand = "mvn clean install -DskipTests -Dmaven.resources.skip=true"
 
 [deploy]
 startCommand = "java -jar target/*.jar"
+healthcheckPath = "/"
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 10
+restartPolicyMaxRetries = 5
