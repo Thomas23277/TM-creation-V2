@@ -6,7 +6,7 @@ import com.foodstore.htmeleros.entity.Categoria;
 public class CategoriaMapper {
 
     // ============================================
-    // ENTITY → DTO
+    // ENTITY → DTO (De la Base de Datos al Frontend)
     // ============================================
     public static CategoriaDTO toDTO(Categoria categoria) {
         if (categoria == null) return null;
@@ -14,6 +14,9 @@ public class CategoriaMapper {
         CategoriaDTO dto = new CategoriaDTO();
         dto.setId(categoria.getId());
         dto.setNombre(categoria.getNombre());
+
+        // 🔥 CAMBIO CLAVE: Le pasamos el estado real al DTO para que Netlify lo sepa
+        dto.setDisponible(categoria.isDisponible());
 
         // normalizamos para frontend
         if (categoria.getUrlImagen() != null && !categoria.getUrlImagen().isBlank()) {
@@ -32,7 +35,7 @@ public class CategoriaMapper {
     }
 
     // ============================================
-    // DTO → ENTITY
+    // DTO → ENTITY (Del Frontend a la Base de Datos)
     // ============================================
     public static Categoria toEntity(CategoriaDTO dto) {
         if (dto == null) return null;
@@ -40,6 +43,9 @@ public class CategoriaMapper {
         Categoria categoria = new Categoria();
         categoria.setId(dto.getId());
         categoria.setNombre(dto.getNombre());
+
+        // 🔥 Por seguridad, si el frontend no manda el estado, asumimos que está disponible
+        categoria.setDisponible(dto.getDisponible() != null ? dto.getDisponible() : true);
 
         // limpiamos antes de persistir
         if (dto.getUrlImagen() != null && !dto.getUrlImagen().isBlank()) {
