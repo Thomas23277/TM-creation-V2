@@ -3,6 +3,7 @@ package com.foodstore.htmeleros.controller;
 import com.foodstore.htmeleros.dto.CategoriaDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.service.ProductoService;
+import org.springframework.dao.DataIntegrityViolationException; // 🔥 Importante para atrapar el error
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,25 +22,16 @@ public class ProductoController {
         this.productoService = productoService;
     }
 
-    // =====================================================
-    // LIST ALL (Para el Admin: debe devolver TODO)
-    // =====================================================
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> getAll() {
         return ResponseEntity.ok(productoService.findAll());
     }
 
-    // =====================================================
-    // GET BY ID
-    // =====================================================
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.findById(id));
     }
 
-    // =====================================================
-    // CREATE (Optimizado para Multipart)
-    // =====================================================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductoDTO> create(
             @RequestParam("nombre") String nombre,
@@ -47,35 +39,24 @@ public class ProductoController {
             @RequestParam("stock") Integer stock,
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
-            @RequestParam(value = "disponible", required = false, defaultValue = "true") Boolean disponible, // 🔥 Recibimos el estado
+            @RequestParam(value = "disponible", required = false, defaultValue = "true") Boolean disponible,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen
     ) {
-        System.out.println("\n=== 🟢 NUEVA PETICIÓN CREATE PRODUCTO ===");
-        System.out.println("➡ Nombre: " + nombre + " | Disponible: " + disponible);
-
         ProductoDTO dto = new ProductoDTO();
         dto.setNombre(nombre);
         dto.setPrecio(precio);
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
-        dto.setDisponible(disponible != null ? disponible : true); // Fallback de seguridad
+        dto.setDisponible(disponible != null ? disponible : true);
 
-        // Mapeo de categoría
         CategoriaDTO catDto = new CategoriaDTO();
         catDto.setId(categoriaId);
         dto.setCategoria(catDto);
 
         ProductoDTO saved = productoService.save(dto, imagen);
-
-        System.out.println("✅ Producto guardado con éxito. Estado: " + (saved.getDisponible() ? "DISPONIBLE" : "OCULTO"));
-        System.out.println("==========================================\n");
-
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // =====================================================
-    // UPDATE (Optimizado para Multipart)
-    // =====================================================
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductoDTO> update(
             @PathVariable Long id,
@@ -84,20 +65,15 @@ public class ProductoController {
             @RequestParam("stock") Integer stock,
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
-            @RequestParam(value = "disponible", required = false) Boolean disponible, // 🔥 Capturamos el cambio de switch
+            @RequestParam(value = "disponible", required = false) Boolean disponible,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen
     ) {
-        System.out.println("\n=== 🟡 NUEVA PETICIÓN UPDATE PRODUCTO ===");
-        System.out.println("➡ Editando ID: " + id + " | Nuevo Estado Disponible: " + disponible);
-
         ProductoDTO dto = new ProductoDTO();
         dto.setId(id);
         dto.setNombre(nombre);
         dto.setPrecio(precio);
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
-
-        // Es vital que si 'disponible' llega nulo, se mantenga el valor que el Service determine
         dto.setDisponible(disponible);
 
         CategoriaDTO catDto = new CategoriaDTO();
@@ -108,12 +84,22 @@ public class ProductoController {
         return ResponseEntity.ok(updated);
     }
 
-    // =====================================================
-    // DELETE
-    // =====================================================
+    // 🔥 LA INTELIGENCIA ESTÁ AQUÍ
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        productoService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        try {
+            // Plan A: Intentar destruir de verdad
+            productoService.deleteById(id);
+            return ResponseEntity.noContent().build();
+
+        } catch (DataIntegrityViolationException e) {
+            // Plan B: Si la BD se queja, lo ocultamos en una transacción nueva
+            System.out.println("⚠️ Producto " + id + " tiene ventas. Ejecutando Ocultamiento seguro.");
+            productoService.ocultarProducto(id);
+
+            // Retornamos OK (200) para que el Frontend (tu panel Admin) no lance error rojo,
+            // sino que recargue la tabla tranquilamente y veamos visualmente el cambio a "Oculto".
+            return ResponseEntity.ok().build();
+        }
     }
 }

@@ -16,4 +16,7 @@ public interface CategoriaService {
     List<CategoriaDTO> findAll();
 
     void deleteById(Long id);
+
+    // 🔥 NUEVO MÉTODO: Transacción limpia para ocultar (Borrado Lógico)
+    void ocultarCategoria(Long id);
 }

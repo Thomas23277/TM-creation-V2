@@ -20,6 +20,9 @@ public interface ProductoService {
 
     void deleteById(Long id);
 
+    // 🔥 NUEVO MÉTODO: Transacción limpia para ocultar
+    void ocultarProducto(Long id);
+
     // ================================
     // FILTROS
     // ================================

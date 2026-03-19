@@ -7,7 +7,6 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.ProductoMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 import com.foodstore.htmeleros.repository.ProductoRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -76,7 +75,6 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     public List<ProductoDTO> findAll() {
-        // Devolvemos TODO para que el Admin Panel pueda ver y gestionar los ocultos
         return productoRepository.findAll().stream()
                 .map(ProductoMapper::toDTO)
                 .toList();
@@ -89,26 +87,25 @@ public class ProductoServiceImpl implements ProductoService {
         return ProductoMapper.toDTO(producto);
     }
 
-    // 🔥 BORRADO INTELIGENTE (Smart Delete)
+    // 🔥 INTENTO DE DESTRUCCIÓN TOTAL
     @Override
     @Transactional
     public void deleteById(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
-        try {
-            // 1. Intentamos destruirlo físicamente
-            productoRepository.delete(producto);
-            productoRepository.flush(); // Forzamos la acción para capturar el error ahora mismo
+        productoRepository.delete(producto);
+        productoRepository.flush(); // Obligamos a la BD a intentar borrarlo AHORA para atrapar el error
+    }
 
-        } catch (DataIntegrityViolationException e) {
-            // 2. Si la BD lo bloquea porque hay pedidos, aplicamos el borrado lógico
-            producto.setDisponible(false);
-            productoRepository.save(producto);
-
-            // Lanzamos una excepción controlada para que el Frontend (tu alert) sepa qué pasó
-            throw new RuntimeException("Tiene pedidos asociados. Fue ocultado (estado: Oculto) para proteger el historial.");
-        }
+    // 🔥 PLAN B: OCULTARLO (Transacción nueva y limpia)
+    @Override
+    @Transactional
+    public void ocultarProducto(Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+        producto.setDisponible(false);
+        productoRepository.save(producto);
     }
 
     @Override

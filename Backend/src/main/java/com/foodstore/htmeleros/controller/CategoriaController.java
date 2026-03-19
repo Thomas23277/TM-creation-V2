@@ -3,6 +3,7 @@ package com.foodstore.htmeleros.controller;
 import com.foodstore.htmeleros.dto.CategoriaDTO;
 import com.foodstore.htmeleros.service.CategoriaService;
 
+import org.springframework.dao.DataIntegrityViolationException; // 🔥 Importación clave
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,7 +29,6 @@ public class CategoriaController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CategoriaDTO> save(
             @RequestParam("nombre") String nombre,
-            // 🔥 CAMBIO CLAVE: Usamos @RequestPart para mayor compatibilidad con archivos
             @RequestPart(value = "imagen", required = false) MultipartFile imagen
     ) {
 
@@ -102,11 +102,22 @@ public class CategoriaController {
     }
 
     // =====================================================
-    // DELETE
+    // DELETE INTELIGENTE
     // =====================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        categoriaService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        try {
+            // Plan A: Intentar destruir de verdad
+            categoriaService.deleteById(id);
+            return ResponseEntity.noContent().build();
+
+        } catch (DataIntegrityViolationException e) {
+            // Plan B: Si la BD se queja (porque tiene productos), la ocultamos en una transacción nueva
+            System.out.println("⚠️ Categoría " + id + " tiene productos. Ejecutando Ocultamiento seguro.");
+            categoriaService.ocultarCategoria(id);
+
+            // Retornamos OK (200) para que el Frontend recargue la tabla visualmente sin error
+            return ResponseEntity.ok().build();
+        }
     }
 }

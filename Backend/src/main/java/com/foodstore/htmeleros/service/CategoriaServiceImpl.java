@@ -7,7 +7,6 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.CategoriaMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -111,41 +110,41 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public List<CategoriaDTO> findAll() {
-        // 🔥 Removido el filtro para que el Admin pueda ver TODO y gestionarlo
         return categoriaRepository.findAll()
                 .stream()
                 .map(CategoriaMapper::toDTO)
                 .toList();
     }
 
-    // 🔥 BORRADO INTELIGENTE (Smart Delete en Cascada)
+    // 🔥 INTENTO DE DESTRUCCIÓN TOTAL (Plan A)
     @Override
     @Transactional
     public void deleteById(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
 
-        try {
-            // Intentamos borrar la categoría físicamente
-            categoriaRepository.delete(categoria);
-            categoriaRepository.flush();
+        categoriaRepository.delete(categoria);
+        categoriaRepository.flush(); // Obligamos a ejecutarlo AHORA para ver si la BD se queja
 
-            // Si se logró borrar, eliminamos la foto del disco para no ocupar espacio inútil
-            eliminarImagen(categoria.getUrlImagen());
+        // Si sobrevive al flush (se borró con éxito), limpiamos el disco duro
+        eliminarImagen(categoria.getUrlImagen());
+    }
 
-        } catch (DataIntegrityViolationException e) {
-            // Si la BD da error (porque tiene productos asignados), la ocultamos
-            categoria.setDisponible(false);
+    // 🔥 BORRADO LÓGICO Y CASCADA (Plan B)
+    @Override
+    @Transactional
+    public void ocultarCategoria(Long id) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
 
-            // Y ocultamos todos sus productos hijos para que no se sigan vendiendo
-            if (categoria.getProductos() != null) {
-                for (Producto producto : categoria.getProductos()) {
-                    producto.setDisponible(false);
-                }
+        categoria.setDisponible(false);
+
+        // Ocultamos todos sus productos hijos para que no se sigan vendiendo
+        if (categoria.getProductos() != null) {
+            for (Producto producto : categoria.getProductos()) {
+                producto.setDisponible(false);
             }
-            categoriaRepository.save(categoria);
-
-            throw new RuntimeException("Tiene productos asociados. Fue ocultada para proteger los datos.");
         }
+        categoriaRepository.save(categoria);
     }
 }
