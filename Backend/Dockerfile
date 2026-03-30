@@ -1,19 +1,16 @@
-# Usamos Java 17
-FROM eclipse-temurin:17-jdk-alpine
-
+# 1. Etapa de construcción (Build)
+FROM maven:3.8.5-openjdk-17-slim AS build
 WORKDIR /app
-
-# Copiamos todo el contenido de la carpeta Backend
+# Copiamos todo el contenido
 COPY . .
+# Compilamos directamente con maven instalado en la imagen
+RUN mvn clean package -DskipTests
 
-# Le damos permiso de ejecución al Maven Wrapper que ya tenés en tu proyecto
-RUN chmod +x mvnw
+# 2. Etapa de ejecución (Run)
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+# Copiamos el archivo .jar generado (buscamos por patrón para no errar al nombre)
+COPY --from=build /app/target/*.jar app.jar
 
-# Compilamos usando el wrapper (mvnw) que no necesita instalar Maven aparte
-RUN ./mvnw clean package -DskipTests
-
-# Exponemos el puerto de Render
 EXPOSE 10000
-
-# Ejecutamos el jar
-CMD ["sh", "-c", "java -jar target/*.jar --server.port=10000"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--server.port=10000"]
