@@ -43,15 +43,16 @@ public class SecurityConfig {
     }
 
     /* ============================================================
-       🌍 CORS CONFIG (CORREGIDO PARA NETLIFY)
+       🌍 CORS CONFIG (CORREGIDO PARA NETLIFY NUEVO)
     ============================================================ */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
 
-        // ✅ Autorizamos Netlify y Localhost para que puedas seguir probando en ambos
+        // ✅ Autorizamos el Netlify NUEVO, el viejo (por las dudas) y Localhost
         config.setAllowedOrigins(List.of(
+                "https://eloquent-nasturtium-a1cc5f.netlify.app",
                 "https://spontaneous-babka-6d72b4.netlify.app",
                 "http://localhost:5173"
         ));
@@ -99,8 +100,8 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
                         )
-                        // ✅ Éxito redirige a Netlify
-                        .defaultSuccessUrl("https://spontaneous-babka-6d72b4.netlify.app/", true)
+                        // ✅ Éxito redirige al Netlify NUEVO
+                        .defaultSuccessUrl("https://eloquent-nasturtium-a1cc5f.netlify.app/", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
