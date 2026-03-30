@@ -1,17 +1,19 @@
 # Usamos Java 17
 FROM eclipse-temurin:17-jdk-alpine
 
-# Instalamos Maven para compilar adentro del servidor
-RUN apk add --no-network --no-cache maven
-
 WORKDIR /app
+
+# Copiamos todo el contenido de la carpeta Backend
 COPY . .
 
-# Compilamos y saltamos los tests para que sea rápido
-RUN mvn clean package -DskipTests
+# Le damos permiso de ejecución al Maven Wrapper que ya tenés en tu proyecto
+RUN chmod +x mvnw
 
-# Exponemos el puerto que usa Render
+# Compilamos usando el wrapper (mvnw) que no necesita instalar Maven aparte
+RUN ./mvnw clean package -DskipTests
+
+# Exponemos el puerto de Render
 EXPOSE 10000
 
-# Ejecutamos el archivo generado (usamos un asterisco para no errarle al nombre)
+# Ejecutamos el jar
 CMD ["sh", "-c", "java -jar target/*.jar --server.port=10000"]
