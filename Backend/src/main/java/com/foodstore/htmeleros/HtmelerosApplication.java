@@ -6,10 +6,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.EnableAsync; // <-- IMPORTANTE PARA LOS CORREOS ASÍNCRONOS
 import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
 import com.foodstore.htmeleros.enums.Rol;
 import com.foodstore.htmeleros.auth.util.Sha256Util;
+
+import jakarta.annotation.PostConstruct; // <-- PARA LA ZONA HORARIA
+import java.util.TimeZone;             // <-- PARA LA ZONA HORARIA
 
 @SpringBootApplication
 @ComponentScan(basePackages = {
@@ -20,10 +24,20 @@ import com.foodstore.htmeleros.auth.util.Sha256Util;
         "com.foodstore.htmeleros.auth.config"
 })
 @EnableScheduling
+@EnableAsync // Habilita la ejecución asíncrona (esencial para los emails)
 public class HtmelerosApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(HtmelerosApplication.class, args);
+    }
+
+    // ============================================================
+    // FORZAR ZONA HORARIA DE ARGENTINA
+    // ============================================================
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("America/Argentina/Buenos_Aires"));
+        System.out.println("[FoodStore] Zona horaria configurada a America/Argentina/Buenos_Aires");
     }
 
     /**

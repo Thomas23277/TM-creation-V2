@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async; // <-- IMPORTANTE
 import org.springframework.stereotype.Service;
 import jakarta.mail.internet.MimeMessage;
 import java.time.format.DateTimeFormatter;
@@ -32,8 +33,10 @@ public class EmailServiceImpl implements EmailService {
     private static final String WHATSAPP_LINK = "https://wa.me/5492616524913";
 
     @Override
+    @Async // <-- El correo se manda en un hilo separado, no bloquea la compra
     public void enviarConfirmacionCliente(Pedido pedido, String emailCliente, String nombreCliente) {
         try {
+            System.out.println("Intentando enviar correo a cliente: " + emailCliente);
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
@@ -43,14 +46,18 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setText(generarHtmlClienteProfesional(pedido, nombreCliente), true);
             mailSender.send(mensaje);
+            System.out.println("Correo a cliente enviado con éxito.");
         } catch (Exception e) {
+            System.err.println("Error al enviar correo al cliente: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     @Override
+    @Async // <-- El correo se manda en un hilo separado
     public void enviarNotificacionAdmin(Pedido pedido, String nombreFormulario, String telefonoFormulario, String emailFormulario) {
         try {
+            System.out.println("Intentando enviar correo a admin: " + emailFrom);
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
@@ -60,7 +67,9 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setText(generarHtmlAdminProfesional(pedido, nombreFormulario, telefonoFormulario, emailFormulario), true);
             mailSender.send(mensaje);
+            System.out.println("Correo a admin enviado con éxito.");
         } catch (Exception e) {
+            System.err.println("Error al enviar correo al admin: " + e.getMessage());
             e.printStackTrace();
         }
     }
