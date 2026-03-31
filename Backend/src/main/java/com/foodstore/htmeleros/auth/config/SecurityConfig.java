@@ -101,8 +101,8 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
                         )
-                        // ✅ Éxito de Google redirige al Netlify NUEVO
-                        .defaultSuccessUrl("https://guileless-cocada-355fdb.netlify.app/", true)
+                        // ✅ EL CAMBIO CLAVE: Éxito de Google ahora redirige directo a tu HOME real
+                        .defaultSuccessUrl("https://guileless-cocada-355fdb.netlify.app/src/pages/store/home/home.html", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
