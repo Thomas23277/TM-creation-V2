@@ -50,8 +50,9 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
 
-        // ✅ Autorizamos el Netlify NUEVO, el viejo (por las dudas) y Localhost
+        // ✅ Agregamos tu NUEVO Netlify (guileless-cocada) a la lista VIP
         config.setAllowedOrigins(List.of(
+                "https://guileless-cocada-355fdb.netlify.app", // ¡El nuevo!
                 "https://eloquent-nasturtium-a1cc5f.netlify.app",
                 "https://spontaneous-babka-6d72b4.netlify.app",
                 "http://localhost:5173"
@@ -100,8 +101,8 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
                         )
-                        // ✅ Éxito redirige al Netlify NUEVO
-                        .defaultSuccessUrl("https://eloquent-nasturtium-a1cc5f.netlify.app/", true)
+                        // ✅ Éxito de Google redirige al Netlify NUEVO
+                        .defaultSuccessUrl("https://guileless-cocada-355fdb.netlify.app/", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
@@ -120,4 +121,4 @@ public class SecurityConfig {
 
         return http.build();
     }
-}
+}s
