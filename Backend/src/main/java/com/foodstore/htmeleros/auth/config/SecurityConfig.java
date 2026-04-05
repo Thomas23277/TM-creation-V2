@@ -52,7 +52,7 @@ public class SecurityConfig {
 
         // ✅ Agregamos tu NUEVO Netlify (guileless-cocada) a la lista VIP
         config.setAllowedOrigins(List.of(
-                "https://guileless-cocada-355fdb.netlify.app", // ¡El nuevo!
+                "https://tmcreation.netlify.app", // ¡El nuevo!
                 "https://eloquent-nasturtium-a1cc5f.netlify.app",
                 "https://spontaneous-babka-6d72b4.netlify.app",
                 "http://localhost:5173"
@@ -102,7 +102,7 @@ public class SecurityConfig {
                                 userInfo.userService(customOAuth2UserService)
                         )
                         // ✅ EL CAMBIO CLAVE: Éxito de Google ahora redirige directo a tu HOME real
-                        .defaultSuccessUrl("https://guileless-cocada-355fdb.netlify.app/src/pages/store/home/home.html", true)
+                        .defaultSuccessUrl("https://tmcreation.netlify.app/src/pages/store/home/home.html", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/api/auth/logout")
