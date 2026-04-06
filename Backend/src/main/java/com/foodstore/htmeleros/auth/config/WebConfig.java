@@ -34,6 +34,7 @@ public class WebConfig implements WebMvcConfigurer {
             uploadPath += "/";
         }
 
+
         System.out.println("📂 Servir imágenes desde:");
         System.out.println("➡ " + uploadPath);
 
