@@ -140,6 +140,13 @@ public class SecurityConfig {
                                 "/api/resenas/**"
                         ).permitAll()
 
+                        // 🔓 Crear reseñas y promociones (requiere autenticación)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/resenas/**",
+                                "/api/promociones/**"
+                        ).authenticated()
+
                         // =================================================
                         // 👤 USER AUTENTICADO
                         // =================================================
