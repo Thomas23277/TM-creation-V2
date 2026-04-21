@@ -59,7 +59,7 @@ public class UploadService {
         try {
             String publicId = extractPublicId(imageUrl);
             if (publicId != null) {
-                cloudinary.uploader().destroy(publicId);
+                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
             }
         } catch (Exception e) {
             System.err.println("Error deleting from Cloudinary: " + e.getMessage());
