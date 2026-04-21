@@ -65,6 +65,7 @@ public class SecurityConfig {
         // Frontend Vite + Producción (Netlify)
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
+                "https://tmcreations.netlify.app",
                 "https://tmcreation.netlify.app",
                 "https://tm-creation-v2.onrender.com"
         ));
