@@ -1,8 +1,8 @@
 package com.foodstore.htmeleros.controller;
 
 import com.foodstore.htmeleros.entity.Resena;
-import com.foodstore.htmeleros.entity.Producto;
-import com.foodstore.htmeleros.entity.Usuario;
+import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.UsuarioDTO;
 import com.foodstore.htmeleros.service.ProductoService;
 import com.foodstore.htmeleros.service.ResenaService;
 import com.foodstore.htmeleros.service.UsuarioService;
@@ -46,30 +46,28 @@ public class ResenaController {
     }
 
     @PostMapping
-    public ResponseEntity<Resena> crear(@RequestBody Map<String, Long> request) {
-        Long productoId = request.get("productoId");
-        Long usuarioId = request.get("usuarioId");
-        Integer estrellas = request.get("estrellas") != null ? request.get("estrellas").intValue() : 5;
-        String comentario = request.get("comentario");
+    public ResponseEntity<Resena> crear(@RequestBody Map<String, Object> request) {
+        Long productoId = Long.parseLong(request.get("productoId").toString());
+        Long usuarioId = Long.parseLong(request.get("usuarioId").toString());
+        Integer estrellas = request.get("estrellas") != null ? Integer.parseInt(request.get("estrellas").toString()) : 5;
+        String comentario = request.get("comentario") != null ? request.get("comentario").toString() : "";
 
         if (resenaService.usuarioYaReseno(usuarioId, productoId)) {
             return ResponseEntity.badRequest().build();
         }
 
-        Producto producto = productoService.findById(productoId).orElse(null);
-        Usuario usuario = usuarioService.findById(usuarioId).orElse(null);
+        ProductoDTO productoDTO = productoService.findById(productoId);
+        UsuarioDTO usuarioDTO = usuarioService.findById(usuarioId);
 
-        if (producto == null || usuario == null) {
+        if (productoDTO == null || usuarioDTO == null) {
             return ResponseEntity.badRequest().build();
         }
 
         Resena resena = new Resena();
         resena.setEstrellas(estrellas);
         resena.setComentario(comentario);
-        resena.setProducto(producto);
-        resena.setUsuario(usuario);
 
-        return ResponseEntity.ok(resenaService.guardar(resena));
+        return ResponseEntity.ok(resenaService.guardar(resena, productoId, usuarioId));
     }
 
     @DeleteMapping("/{id}")

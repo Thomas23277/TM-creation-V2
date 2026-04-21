@@ -1,7 +1,11 @@
 package com.foodstore.htmeleros.service;
 
 import com.foodstore.htmeleros.entity.Resena;
+import com.foodstore.htmeleros.entity.Producto;
+import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.repository.ResenaRepository;
+import com.foodstore.htmeleros.repository.ProductoRepository;
+import com.foodstore.htmeleros.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -11,16 +15,27 @@ import java.util.Optional;
 public class ResenaServiceImpl implements ResenaService {
 
     private final ResenaRepository resenaRepository;
+    private final ProductoRepository productoRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    public ResenaServiceImpl(ResenaRepository resenaRepository) {
+    public ResenaServiceImpl(ResenaRepository resenaRepository, ProductoRepository productoRepository, UsuarioRepository usuarioRepository) {
         this.resenaRepository = resenaRepository;
+        this.productoRepository = productoRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     @Override
     @Transactional
-    public Resena guardar(Resena resena) {
+    public Resena guardar(Resena resena, Long productoId, Long usuarioId) {
         if (resena.getEstrellas() < 1) resena.setEstrellas(1);
         if (resena.getEstrellas() > 5) resena.setEstrellas(5);
+
+        Producto producto = productoRepository.findById(productoId).orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        resena.setProducto(producto);
+        resena.setUsuario(usuario);
+
         return resenaRepository.save(resena);
     }
 

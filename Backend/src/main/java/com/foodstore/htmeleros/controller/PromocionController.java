@@ -42,7 +42,7 @@ public class PromocionController {
 
         String urlImagen = null;
         if (imagen != null && !imagen.isEmpty()) {
-            urlImagen = uploadService.subirImagen(imagen, "promociones");
+            urlImagen = uploadService.uploadImage(imagen, "promociones");
         }
 
         Promocion promocion = new Promocion();
@@ -72,7 +72,7 @@ public class PromocionController {
             p.setOrden(orden);
 
             if (imagen != null && !imagen.isEmpty()) {
-                String urlImagen = uploadService.subirImagen(imagen, "promociones");
+                String urlImagen = uploadService.uploadImage(imagen, "promociones");
                 p.setUrlImagen(urlImagen);
             }
 
