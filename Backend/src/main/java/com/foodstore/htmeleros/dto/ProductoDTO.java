@@ -28,6 +28,10 @@ public class ProductoDTO {
     // Campo extra necesario para capturar el ID desde el FormData del Admin
     private Long categoriaId;
 
+    // Campos para promedio de reseñas
+    private Double promedioResenas = 0.0;
+    private Long totalResenas = 0L;
+
     /**
      * Helper manual por si tu IDE o compilador sigue
      * teniendo problemas con Lombok y los booleanos.

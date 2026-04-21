@@ -33,6 +33,12 @@ public class Producto {
  @Column(name = "url_imagen")
  private String urlImagen;
 
+ @Transient
+ private Double promedioResenas;
+
+ @Transient
+ private Long totalResenas;
+
  // 🔥 Este campo ya está perfecto para el Toggle Switch del Admin
  @Column(nullable = false)
  private boolean disponible = true;

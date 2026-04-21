@@ -131,11 +131,13 @@ public class SecurityConfig {
                                 "/login/**"
                         ).permitAll()
 
-                        // 🔓 Lectura pública de productos y categorías
+                        // 🔓 Lectura pública de productos, categorías, promociones y reseñas
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/api/productos/**",
-                                "/api/categoria/**"
+                                "/api/categoria/**",
+                                "/api/promociones/**",
+                                "/api/resenas/**"
                         ).permitAll()
 
                         // =================================================
