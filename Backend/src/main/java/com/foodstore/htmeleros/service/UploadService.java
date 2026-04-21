@@ -1,7 +1,6 @@
 package com.foodstore.htmeleros.service;
 
 import com.cloudinary.Cloudinary;
-import com.cloudinary.api.ApiResponse;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -30,7 +29,7 @@ public class UploadService {
 
     public String uploadImage(MultipartFile file, String folder) {
         try {
-            String publicId = folder + "/" + UUID.randomUUID().toString();
+            String publicId = folder + "_" + UUID.randomUUID().toString();
 
             Map params = ObjectUtils.asMap(
                     "public_id", publicId,
