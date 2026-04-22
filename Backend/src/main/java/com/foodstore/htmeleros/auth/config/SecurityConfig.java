@@ -140,12 +140,29 @@ public class SecurityConfig {
                                 "/api/resenas/**"
                         ).permitAll()
 
-                        // 🔓 Crear reseñas y promociones (requiere autenticación)
+                        // 🔓 DELETE de reseñas y promociones (admin)
                         .requestMatchers(
-                                HttpMethod.POST,
+                                HttpMethod.DELETE,
                                 "/api/resenas/**",
                                 "/api/promociones/**"
+                        ).hasRole("ADMIN")
+
+                        // 🔓 Crear reseñas (requiere autenticación)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/resenas/**"
                         ).authenticated()
+
+                        // 🔓 Crear/editar promociones (admin)
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/api/promociones/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/api/promociones/**"
+                        ).hasRole("ADMIN")
 
                         // =================================================
                         // 👤 USER AUTENTICADO

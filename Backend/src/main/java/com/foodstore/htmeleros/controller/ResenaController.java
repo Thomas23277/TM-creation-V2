@@ -7,6 +7,7 @@ import com.foodstore.htmeleros.service.ProductoService;
 import com.foodstore.htmeleros.service.ResenaService;
 import com.foodstore.htmeleros.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -28,11 +29,13 @@ public class ResenaController {
     }
 
     @GetMapping
+    @Transactional(readOnly = true)
     public ResponseEntity<List<Resena>> getAll() {
         return ResponseEntity.ok(resenaService.findAll());
     }
 
     @GetMapping("/producto/{productoId}")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> getByProducto(@PathVariable Long productoId) {
         List<Resena> resenas = resenaService.findByProductoId(productoId);
         Double promedio = resenaService.getPromedioEstrellas(productoId);
