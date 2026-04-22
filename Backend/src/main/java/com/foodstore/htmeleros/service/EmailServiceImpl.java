@@ -102,7 +102,7 @@ public class EmailServiceImpl implements EmailService {
                     </p>
 
                     <div style="margin-top: 25px; text-align: center;">
-                        <a href="https://tmcreation.netlify.app/src/pages/admin/reviews/reviews.html" style="background-color: #2dd4bf; color: #0f172a; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver Todas las Reseñas</a>
+                        <a href="https://tmcreattion.netlify.app/src/pages/admin/reviews/reviews.html" style="background-color: #2dd4bf; color: #0f172a; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver Todas las Reseñas</a>
                     </div>
                 </div>
             </div>
