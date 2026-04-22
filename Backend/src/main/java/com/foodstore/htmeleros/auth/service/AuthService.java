@@ -44,6 +44,12 @@ public class AuthService {
             throw new IllegalArgumentException("Email ya registrado");
         }
 
+        String nombreIngresado = req.getNombre().trim();
+        String nombreNormalizado = nombreIngresado.toLowerCase().replace("✅", "").replace("✅", "").replace("✔", "").replace("✔", "").replace("✓", "").replace("✓", "");
+        if (nombreNormalizado.equals("tmcreationoficial") || nombreNormalizado.contains("tmcreation oficial") || nombreNormalizado.contains("tmcreationoficial")) {
+            throw new IllegalArgumentException("Nombre de usuario reservado. Elegí otro.");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setNombre(req.getNombre().trim());
         usuario.setApellido(req.getApellido().trim());

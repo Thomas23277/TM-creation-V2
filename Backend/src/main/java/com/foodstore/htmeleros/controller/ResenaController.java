@@ -1,11 +1,13 @@
 package com.foodstore.htmeleros.controller;
 
 import com.foodstore.htmeleros.entity.Resena;
+import com.foodstore.htmeleros.entity.RespuestaResena;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.UsuarioDTO;
 import com.foodstore.htmeleros.service.EmailService;
 import com.foodstore.htmeleros.service.ProductoService;
 import com.foodstore.htmeleros.service.ResenaService;
+import com.foodstore.htmeleros.service.RespuestaResenaService;
 import com.foodstore.htmeleros.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +27,15 @@ public class ResenaController {
     private final ProductoService productoService;
     private final UsuarioService usuarioService;
     private final EmailService emailService;
+    private final RespuestaResenaService respuestaResenaService;
 
     @Autowired
-    public ResenaController(ResenaService resenaService, ProductoService productoService, UsuarioService usuarioService, EmailService emailService) {
+    public ResenaController(ResenaService resenaService, ProductoService productoService, UsuarioService usuarioService, EmailService emailService, RespuestaResenaService respuestaResenaService) {
         this.resenaService = resenaService;
         this.productoService = productoService;
         this.usuarioService = usuarioService;
         this.emailService = emailService;
+        this.respuestaResenaService = respuestaResenaService;
     }
 
     @GetMapping
@@ -95,17 +99,23 @@ public class ResenaController {
     }
 
     @PostMapping("/{id}/responder")
-    public ResponseEntity<Resena> responder(@PathVariable Long id, @RequestBody Map<String, String> request) {
-        String respuesta = request.get("respuesta");
+    public ResponseEntity<RespuestaResena> responder(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String respuestaTexto = request.get("respuesta");
         String respondidoPor = request.get("respondidoPor");
         Optional<Resena> optResena = resenaService.findById(id);
         if (optResena.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        Resena resena = optResena.get();
-        resena.setRespuesta(respuesta);
-        resena.setRespondidoPor(respondidoPor);
-        resenaService.guardar(resena);
-        return ResponseEntity.ok(resena);
+        RespuestaResena respuesta = new RespuestaResena();
+        respuesta.setRespuesta(respuestaTexto);
+        respuesta.setRespondidoPor(respondidoPor);
+        respuesta.setResena(optResena.get());
+        RespuestaResena saved = respuestaResenaService.guardar(respuesta);
+        return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/{id}/respuestas")
+    public ResponseEntity<List<RespuestaResena>> getRespuestas(@PathVariable Long id) {
+        return ResponseEntity.ok(respuestaResenaService.findByResenaId(id));
     }
 }
