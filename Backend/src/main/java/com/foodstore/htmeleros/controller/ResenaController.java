@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.HashMap;
 
 @RestController
@@ -96,10 +97,11 @@ public class ResenaController {
     @PostMapping("/{id}/responder")
     public ResponseEntity<Resena> responder(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String respuesta = request.get("respuesta");
-        Resena resena = resenaService.findById(id);
-        if (resena == null) {
+        Optional<Resena> optResena = resenaService.findById(id);
+        if (optResena.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        Resena resena = optResena.get();
         resena.setRespuesta(respuesta);
         resenaService.guardar(resena);
         return ResponseEntity.ok(resena);
