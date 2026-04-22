@@ -65,6 +65,50 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    public void enviarNotificacionNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
+        try {
+            MimeMessage mensaje = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
+
+            helper.setFrom(emailFrom);
+            helper.setTo(emailFrom);
+            helper.setSubject("⭐ NUEVA RESEÑA - " + nombreProducto + " - " + nombreUsuario);
+
+            helper.setText(generarHtmlNuevaResena(nombreUsuario, nombreProducto, estrellas, comentario), true);
+            mailSender.send(mensaje);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String generarHtmlNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
+        String estrellasHtml = "★".repeat(estrellas) + "☆".repeat(5 - estrellas);
+        
+        return """
+            <div style="font-family: sans-serif; padding: 20px; background-color: #f3f4f6;">
+                <div style="background: white; padding: 25px; border-radius: 12px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0;">
+                    <h2 style="color: #f59e0b; border-bottom: 3px solid #f59e0b; padding-bottom: 10px; margin-top: 0;">⭐ Nueva Reseña Recibida</h2>
+                    
+                    <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+                        <p style="margin: 5px 0;"><b>Usuario:</b> %s</p>
+                        <p style="margin: 5px 0;"><b>Producto:</b> %s</p>
+                        <p style="margin: 5px 0;"><b>Calificación:</b> <span style="color: #f59e0b; font-size: 18px;">%s</span></p>
+                    </div>
+
+                    <h3 style="color: #1e293b; font-size: 16px;">💬 Comentario:</h3>
+                    <p style="background-color: #f8fafc; padding: 15px; border-radius: 8px; color: #4b5563; font-style: italic;">
+                        %s
+                    </p>
+
+                    <div style="margin-top: 25px; text-align: center;">
+                        <a href="https://tmcreation.netlify.app/src/pages/admin/reviews/reviews.html" style="background-color: #2dd4bf; color: #0f172a; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver Todas las Reseñas</a>
+                    </div>
+                </div>
+            </div>
+            """.formatted(nombreUsuario, nombreProducto, estrellasHtml, comentario != null && !comentario.isEmpty() ? comentario : "Sin comentario");
+    }
+
     private String generarHtmlClienteProfesional(Pedido pedido, String nombre) {
         return """
             <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; max-width: 650px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">

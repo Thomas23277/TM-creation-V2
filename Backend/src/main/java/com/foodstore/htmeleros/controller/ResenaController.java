@@ -3,12 +3,14 @@ package com.foodstore.htmeleros.controller;
 import com.foodstore.htmeleros.entity.Resena;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.UsuarioDTO;
+import com.foodstore.htmeleros.service.EmailService;
 import com.foodstore.htmeleros.service.ProductoService;
 import com.foodstore.htmeleros.service.ResenaService;
 import com.foodstore.htmeleros.service.UsuarioService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -21,11 +23,14 @@ public class ResenaController {
     private final ResenaService resenaService;
     private final ProductoService productoService;
     private final UsuarioService usuarioService;
+    private final EmailService emailService;
 
-    public ResenaController(ResenaService resenaService, ProductoService productoService, UsuarioService usuarioService) {
+    @Autowired
+    public ResenaController(ResenaService resenaService, ProductoService productoService, UsuarioService usuarioService, EmailService emailService) {
         this.resenaService = resenaService;
         this.productoService = productoService;
         this.usuarioService = usuarioService;
+        this.emailService = emailService;
     }
 
     @GetMapping
@@ -70,7 +75,11 @@ public class ResenaController {
         resena.setEstrellas(estrellas);
         resena.setComentario(comentario);
 
-        return ResponseEntity.ok(resenaService.guardar(resena, productoId, usuarioId));
+        Resena saved = resenaService.guardar(resena, productoId, usuarioId);
+        
+        emailService.enviarNotificacionNuevaResena(usuarioDTO.getNombre(), productoDTO.getNombre(), estrellas, comentario);
+        
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
