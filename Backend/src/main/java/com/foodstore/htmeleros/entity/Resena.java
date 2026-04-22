@@ -28,6 +28,9 @@ public class Resena {
     @Column(length = 2000)
     private String respuesta;
 
+    @Column(length = 100)
+    private String respondidoPor;
+
     @Column(nullable = false)
     private LocalDateTime fecha;
 

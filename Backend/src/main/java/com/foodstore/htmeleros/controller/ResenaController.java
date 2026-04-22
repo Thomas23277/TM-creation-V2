@@ -97,12 +97,14 @@ public class ResenaController {
     @PostMapping("/{id}/responder")
     public ResponseEntity<Resena> responder(@PathVariable Long id, @RequestBody Map<String, String> request) {
         String respuesta = request.get("respuesta");
+        String respondidoPor = request.get("respondidoPor");
         Optional<Resena> optResena = resenaService.findById(id);
         if (optResena.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         Resena resena = optResena.get();
         resena.setRespuesta(respuesta);
+        resena.setRespondidoPor(respondidoPor);
         resenaService.guardar(resena);
         return ResponseEntity.ok(resena);
     }
