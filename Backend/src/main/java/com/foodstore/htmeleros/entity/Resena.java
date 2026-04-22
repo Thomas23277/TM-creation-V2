@@ -25,6 +25,9 @@ public class Resena {
     @Column(length = 1000)
     private String comentario;
 
+    @Column(length = 2000)
+    private String respuesta;
+
     @Column(nullable = false)
     private LocalDateTime fecha;
 

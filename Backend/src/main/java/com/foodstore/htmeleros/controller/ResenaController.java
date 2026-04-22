@@ -92,4 +92,16 @@ public class ResenaController {
     public ResponseEntity<List<Resena>> getByUsuario(@PathVariable Long usuarioId) {
         return ResponseEntity.ok(resenaService.findByUsuarioId(usuarioId));
     }
+
+    @PostMapping("/{id}/responder")
+    public ResponseEntity<Resena> responder(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String respuesta = request.get("respuesta");
+        Resena resena = resenaService.findById(id);
+        if (resena == null) {
+            return ResponseEntity.notFound().build();
+        }
+        resena.setRespuesta(respuesta);
+        resenaService.guardar(resena);
+        return ResponseEntity.ok(resena);
+    }
 }

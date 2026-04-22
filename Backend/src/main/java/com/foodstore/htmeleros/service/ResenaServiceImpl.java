@@ -40,6 +40,12 @@ public class ResenaServiceImpl implements ResenaService {
     }
 
     @Override
+    @Transactional
+    public Resena guardar(Resena resena) {
+        return resenaRepository.save(resena);
+    }
+
+    @Override
     public List<Resena> findAll() {
         return resenaRepository.findAll();
     }

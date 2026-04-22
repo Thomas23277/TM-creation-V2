@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public interface ResenaService {
     Resena guardar(Resena resena, Long productoId, Long usuarioId);
+    Resena guardar(Resena resena);
     List<Resena> findAll();
     List<Resena> findByProductoId(Long productoId);
     Optional<Resena> findById(Long id);
