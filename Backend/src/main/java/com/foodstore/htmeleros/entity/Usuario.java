@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.entity;
 
 import com.foodstore.htmeleros.enums.Rol;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.util.List;
@@ -35,6 +36,7 @@ public class Usuario {
     private Rol rol;
 
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Pedido> pedidos;
 }
 

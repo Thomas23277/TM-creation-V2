@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.foodstore.htmeleros.enums.Estado;
 
 import jakarta.persistence.*;
@@ -32,6 +33,7 @@ public class Pedido {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "usuario_id", nullable = false)
+    @JsonIgnore
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
