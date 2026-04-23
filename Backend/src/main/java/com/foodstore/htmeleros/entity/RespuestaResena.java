@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class RespuestaResena {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "resena_id", nullable = false)
+    @JsonIgnore
     private Resena resena;
 
     @PrePersist

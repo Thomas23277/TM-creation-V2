@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -44,6 +45,7 @@ public class Resena {
     private Producto producto;
 
     @OneToMany(mappedBy = "resena", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<RespuestaResena> respuestas;
 
     @PrePersist
