@@ -207,7 +207,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
                         )
-                        .defaultSuccessUrl("http://localhost:5173/", true)
+                        .defaultSuccessUrl("https://tmcreattion.netlify.app/", true)
                 )
 
                 // =====================================================
