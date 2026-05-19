@@ -14,6 +14,7 @@ public class CategoriaMapper {
         CategoriaDTO dto = new CategoriaDTO();
         dto.setId(categoria.getId());
         dto.setNombre(categoria.getNombre());
+        dto.setDisponible(categoria.isDisponible());
 
         // normalizamos para frontend
         if (categoria.getUrlImagen() != null && !categoria.getUrlImagen().isBlank()) {

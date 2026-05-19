@@ -6,6 +6,7 @@ import com.foodstore.htmeleros.entity.DetallePedido;
 
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Long> {
 
+    boolean existsByProductoId(Long productoId);
 
 }
 

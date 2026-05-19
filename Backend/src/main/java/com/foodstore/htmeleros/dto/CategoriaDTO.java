@@ -10,4 +10,5 @@ public class CategoriaDTO {
     private Long id;
     private String nombre;
     private String urlImagen;
+    private Boolean disponible = true;
 }

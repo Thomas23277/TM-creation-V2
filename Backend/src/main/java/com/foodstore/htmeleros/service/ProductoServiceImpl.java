@@ -6,6 +6,7 @@ import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.ProductoMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
+import com.foodstore.htmeleros.repository.DetallePedidoRepository;
 import com.foodstore.htmeleros.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,11 +19,13 @@ public class ProductoServiceImpl implements ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final DetallePedidoRepository detallePedidoRepository;
     private final UploadService uploadService;
 
-    public ProductoServiceImpl(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, UploadService uploadService) {
+    public ProductoServiceImpl(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, DetallePedidoRepository detallePedidoRepository, UploadService uploadService) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.detallePedidoRepository = detallePedidoRepository;
         this.uploadService = uploadService;
     }
 
@@ -74,8 +77,13 @@ public class ProductoServiceImpl implements ProductoService {
     public void deleteById(Long id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
-        producto.setDisponible(false);
-        productoRepository.save(producto);
+
+        if (detallePedidoRepository.existsByProductoId(id)) {
+            producto.setDisponible(false);
+            productoRepository.save(producto);
+        } else {
+            productoRepository.delete(producto);
+        }
     }
 
     @Override

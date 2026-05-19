@@ -8,6 +8,7 @@ import com.foodstore.htmeleros.mappers.CategoriaMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -89,17 +90,21 @@ public class CategoriaServiceImpl implements CategoriaService {
     // SOFT DELETE + CASCADA LÓGICA
     // =====================================================
     @Override
+    @Transactional
     public void deleteById(Long id) {
 
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada"));
 
+        if (categoria.getProductos() == null || categoria.getProductos().isEmpty()) {
+            categoriaRepository.delete(categoria);
+            return;
+        }
+
         categoria.setDisponible(false);
 
-        if (categoria.getProductos() != null) {
-            for (Producto producto : categoria.getProductos()) {
-                producto.setDisponible(false);
-            }
+        for (Producto producto : categoria.getProductos()) {
+            producto.setDisponible(false);
         }
 
         categoriaRepository.save(categoria);
