@@ -67,7 +67,8 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://tmcreattion.netlify.app",
                 "https://tmcreation.netlify.app",
-                "https://tm-creation-v2.onrender.com"
+                "https://tm-creation-v2.onrender.com",
+                "https://long-credit-df4e.tmcreation233.workers.dev"
         ));
 
         config.setAllowedMethods(
@@ -207,7 +208,7 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo ->
                                 userInfo.userService(customOAuth2UserService)
                         )
-                        .defaultSuccessUrl("https://tmcreattion.netlify.app/", true)
+                        .defaultSuccessUrl("https://long-credit-df4e.tmcreation233.workers.dev/", true)
                 )
 
                 // =====================================================
