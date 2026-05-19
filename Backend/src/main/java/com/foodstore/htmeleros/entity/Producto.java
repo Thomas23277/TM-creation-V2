@@ -1,5 +1,7 @@
 package com.foodstore.htmeleros.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -48,6 +50,13 @@ public class Producto {
  @ManyToOne(fetch = FetchType.EAGER)
  @JoinColumn(name = "categoria_id", referencedColumnName = "id", nullable = false)
  private Categoria categoria;
+
+ @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+ @OrderBy("orden ASC")
+ private List<ProductoImagen> imagenes = new ArrayList<>();
+
+ @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+ private List<Variante> variantes = new ArrayList<>();
 
  // ============================================================
  // LÓGICA DE NEGOCIO (STOCK)

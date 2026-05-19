@@ -1,8 +1,13 @@
 package com.foodstore.htmeleros.service;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.entity.Categoria;
 import com.foodstore.htmeleros.entity.Producto;
+import com.foodstore.htmeleros.entity.ProductoImagen;
+import com.foodstore.htmeleros.entity.Variante;
 import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.ProductoMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
@@ -11,8 +16,6 @@ import com.foodstore.htmeleros.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 @Service
 public class ProductoServiceImpl implements ProductoService {
@@ -31,13 +34,12 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoDTO save(ProductoDTO dto, MultipartFile imagen) {
+    public ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes) {
         if (dto.getCategoria() == null && dto.getCategoriaId() == null) {
             throw new IllegalArgumentException("El ID de la categoría es obligatorio");
         }
 
         Long catId = dto.getCategoriaId() != null ? dto.getCategoriaId() : dto.getCategoria().getId();
-
         Categoria categoria = categoriaRepository.findById(catId)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada ID: " + catId));
 
@@ -49,9 +51,29 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setDisponible(dto.getDisponible() != null ? dto.getDisponible() : true);
         producto.setCategoria(categoria);
 
-        if (imagen != null && !imagen.isEmpty()) {
-            String url = uploadService.uploadProductoImage(imagen);
-            producto.setUrlImagen(url);
+        producto.setImagenes(new ArrayList<>());
+        producto.setVariantes(new ArrayList<>());
+
+        List<String> urls = subirImagenes(imagen, imagenesAdicionales);
+        if (!urls.isEmpty()) {
+            producto.setUrlImagen(urls.get(0));
+            for (int i = 0; i < urls.size(); i++) {
+                ProductoImagen pi = new ProductoImagen();
+                pi.setUrlImagen(urls.get(i));
+                pi.setOrden(i);
+                pi.setProducto(producto);
+                producto.getImagenes().add(pi);
+            }
+        }
+
+        if (variantes != null) {
+            for (VarianteDTO vDto : variantes) {
+                Variante v = new Variante();
+                v.setNombre(vDto.getNombre());
+                v.setPrecio(vDto.getPrecio());
+                v.setProducto(producto);
+                producto.getVariantes().add(v);
+            }
         }
 
         Producto guardado = productoRepository.save(producto);
@@ -88,7 +110,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen) {
+    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes) {
         Producto existente = productoRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
@@ -107,12 +129,46 @@ public class ProductoServiceImpl implements ProductoService {
 
         existente.setCategoria(categoria);
 
-        if (imagen != null && !imagen.isEmpty()) {
-            String nuevaUrl = uploadService.uploadProductoImage(imagen);
-            existente.setUrlImagen(nuevaUrl);
+        existente.getVariantes().clear();
+        if (variantes != null) {
+            for (VarianteDTO vDto : variantes) {
+                Variante v = new Variante();
+                v.setNombre(vDto.getNombre());
+                v.setPrecio(vDto.getPrecio());
+                v.setProducto(existente);
+                existente.getVariantes().add(v);
+            }
+        }
+
+        List<String> urls = subirImagenes(imagen, imagenesAdicionales);
+        if (!urls.isEmpty()) {
+            existente.getImagenes().clear();
+            existente.setUrlImagen(urls.get(0));
+            for (int i = 0; i < urls.size(); i++) {
+                ProductoImagen pi = new ProductoImagen();
+                pi.setUrlImagen(urls.get(i));
+                pi.setOrden(i);
+                pi.setProducto(existente);
+                existente.getImagenes().add(pi);
+            }
         }
 
         return ProductoMapper.toDTO(productoRepository.save(existente));
+    }
+
+    private List<String> subirImagenes(MultipartFile imagen, List<MultipartFile> imagenesAdicionales) {
+        List<String> urls = new ArrayList<>();
+        if (imagen != null && !imagen.isEmpty()) {
+            urls.add(uploadService.uploadProductoImage(imagen));
+        }
+        if (imagenesAdicionales != null) {
+            for (MultipartFile file : imagenesAdicionales) {
+                if (file != null && !file.isEmpty()) {
+                    urls.add(uploadService.uploadProductoImage(file));
+                }
+            }
+        }
+        return urls;
     }
 
     @Override

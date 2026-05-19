@@ -1,33 +1,24 @@
 package com.foodstore.htmeleros.service;
 
-import com.foodstore.htmeleros.dto.ProductoDTO;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.List;
+import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.VarianteDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface ProductoService {
 
-    // ================================
-    // CRUD
-    // ================================
     List<ProductoDTO> findAll();
 
     ProductoDTO findById(Long id);
 
-    ProductoDTO save(ProductoDTO dto, MultipartFile imagen);
+    ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes);
 
-    ProductoDTO update(ProductoDTO dto, MultipartFile imagen);
+    ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes);
 
     void deleteById(Long id);
 
-    // ================================
-    // FILTROS
-    // ================================
     List<ProductoDTO> findByCategoria(Long categoriaId);
 
-    // ================================
-    // STOCK
-    // ================================
     ProductoDTO venderProducto(Long productoId, int cantidad);
 
     ProductoDTO agregarStock(Long productoId, int cantidad);

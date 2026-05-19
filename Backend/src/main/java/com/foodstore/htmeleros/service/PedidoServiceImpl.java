@@ -12,12 +12,14 @@ import com.foodstore.htmeleros.entity.DetallePedido;
 import com.foodstore.htmeleros.entity.Pedido;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.Usuario;
+import com.foodstore.htmeleros.entity.Variante;
 import com.foodstore.htmeleros.enums.Estado;
 import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.PedidoMapper;
 import com.foodstore.htmeleros.repository.PedidoRepository;
 import com.foodstore.htmeleros.repository.ProductoRepository;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
+import com.foodstore.htmeleros.repository.VarianteRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,6 +40,9 @@ public class PedidoServiceImpl implements PedidoService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private VarianteRepository varianteRepository;
 
     @Autowired
     private EmailService emailService;
@@ -165,12 +170,22 @@ public class PedidoServiceImpl implements PedidoService {
             producto.setStock(producto.getStock() - detDTO.getCantidad());
             productoRepository.save(producto);
 
+            double precioUnitario = producto.getPrecio();
+            String nombreTamano = null;
+
+            if (detDTO.getVarianteId() != null) {
+                Variante variante = varianteRepository.findById(detDTO.getVarianteId())
+                        .orElseThrow(() -> new ResourceNotFoundException("Variante no encontrada"));
+                precioUnitario = variante.getPrecio();
+                nombreTamano = variante.getNombre();
+            }
+
             DetallePedido detalle = new DetallePedido();
             detalle.setPedido(pedido);
             detalle.setProducto(producto);
             detalle.setCantidad(detDTO.getCantidad());
-            detalle.setPrecioUnitario(producto.getPrecio());
-            detalle.setSubtotal(producto.getPrecio() * detDTO.getCantidad());
+            detalle.setPrecioUnitario(precioUnitario);
+            detalle.setNombreTamano(nombreTamano);
 
             total += detalle.getSubtotal();
             detallesFinales.add(detalle);

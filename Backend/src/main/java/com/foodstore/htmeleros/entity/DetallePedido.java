@@ -35,6 +35,13 @@ public class DetallePedido {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variante_id")
+    private Variante variante;
+
+    @Column(name = "nombre_tamano", length = 100)
+    private String nombreTamano;
+
     /* ======================================================
        CALCULO AUTOMATICO DE SUBTOTAL
     ====================================================== */

@@ -21,4 +21,7 @@ public class DetallePedidoDTO {
 
     // ✔ Solo ID del producto
     private Long productoId;
+
+    private Long varianteId;
+    private String nombreTamano;
 }

@@ -3,6 +3,7 @@ package com.foodstore.htmeleros.mappers;
 import com.foodstore.htmeleros.dto.DetallePedidoDTO;
 import com.foodstore.htmeleros.entity.DetallePedido;
 import com.foodstore.htmeleros.entity.Producto;
+import com.foodstore.htmeleros.entity.Variante;
 
 public class DetallePedidoMapper {
 
@@ -15,10 +16,14 @@ public class DetallePedidoMapper {
         dto.setPrecioUnitario(detalle.getPrecioUnitario());
         dto.setSubtotal(detalle.getSubtotal());
 
-        // Enviar *solo* el ID del producto
         if (detalle.getProducto() != null) {
             dto.setProductoId(detalle.getProducto().getId());
         }
+
+        if (detalle.getVariante() != null) {
+            dto.setVarianteId(detalle.getVariante().getId());
+        }
+        dto.setNombreTamano(detalle.getNombreTamano());
 
         return dto;
     }
@@ -32,12 +37,18 @@ public class DetallePedidoMapper {
         detalle.setPrecioUnitario(dto.getPrecioUnitario());
         detalle.setSubtotal(dto.getSubtotal());
 
-        // Crear Producto solo con ID
         if (dto.getProductoId() != null) {
             Producto p = new Producto();
             p.setId(dto.getProductoId());
             detalle.setProducto(p);
         }
+
+        if (dto.getVarianteId() != null) {
+            Variante v = new Variante();
+            v.setId(dto.getVarianteId());
+            detalle.setVariante(v);
+        }
+        detalle.setNombreTamano(dto.getNombreTamano());
 
         return detalle;
     }

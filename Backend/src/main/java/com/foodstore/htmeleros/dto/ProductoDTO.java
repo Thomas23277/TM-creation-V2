@@ -1,5 +1,6 @@
 package com.foodstore.htmeleros.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,9 @@ public class ProductoDTO {
     // Campos para promedio de reseñas
     private Double promedioResenas = 0.0;
     private Long totalResenas = 0L;
+
+    private List<VarianteDTO> variantes;
+    private List<ProductoImagenDTO> imagenes;
 
     /**
      * Helper manual por si tu IDE o compilador sigue

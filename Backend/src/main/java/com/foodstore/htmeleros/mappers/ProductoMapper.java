@@ -1,8 +1,14 @@
 package com.foodstore.htmeleros.mappers;
 
+import java.util.Collections;
+import java.util.List;
 import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.ProductoImagenDTO;
+import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.Categoria;
+import com.foodstore.htmeleros.entity.ProductoImagen;
+import com.foodstore.htmeleros.entity.Variante;
 
 public class ProductoMapper {
 
@@ -38,9 +44,20 @@ public class ProductoMapper {
         }
 
         if (producto.getCategoria() != null) {
-            // Usamos el mapper de categoría para traer el objeto completo al DTO
             dto.setCategoria(CategoriaMapper.toDTO(producto.getCategoria()));
             dto.setCategoriaId(producto.getCategoria().getId());
+        }
+
+        if (producto.getVariantes() != null) {
+            dto.setVariantes(producto.getVariantes().stream()
+                    .map(v -> new VarianteDTO(v.getId(), v.getNombre(), v.getPrecio()))
+                    .toList());
+        }
+
+        if (producto.getImagenes() != null) {
+            dto.setImagenes(producto.getImagenes().stream()
+                    .map(img -> new ProductoImagenDTO(img.getId(), img.getUrlImagen(), img.getOrden()))
+                    .toList());
         }
 
         return dto;

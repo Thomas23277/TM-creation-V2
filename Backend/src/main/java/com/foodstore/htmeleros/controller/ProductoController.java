@@ -1,7 +1,12 @@
 package com.foodstore.htmeleros.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodstore.htmeleros.dto.CategoriaDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.service.ProductoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -9,37 +14,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/productos")
 public class ProductoController {
 
     private final ProductoService productoService;
+    private final ObjectMapper objectMapper;
 
-    public ProductoController(ProductoService productoService) {
+    public ProductoController(ProductoService productoService, ObjectMapper objectMapper) {
         this.productoService = productoService;
+        this.objectMapper = objectMapper;
     }
 
-    // =====================================================
-    // LIST ALL (Para el Admin: debe devolver TODO)
-    // =====================================================
     @GetMapping
     public ResponseEntity<List<ProductoDTO>> getAll() {
         return ResponseEntity.ok(productoService.findAll());
     }
 
-    // =====================================================
-    // GET BY ID
-    // =====================================================
     @GetMapping("/{id}")
     public ResponseEntity<ProductoDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.findById(id));
     }
 
-    // =====================================================
-    // CREATE (Optimizado para Multipart)
-    // =====================================================
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductoDTO> create(
             @RequestParam("nombre") String nombre,
@@ -47,35 +43,29 @@ public class ProductoController {
             @RequestParam("stock") Integer stock,
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
-            @RequestParam(value = "disponible", required = false, defaultValue = "true") Boolean disponible, // 🔥 Recibimos el estado
-            @RequestPart(value = "imagen", required = false) MultipartFile imagen
+            @RequestParam(value = "disponible", required = false, defaultValue = "true") Boolean disponible,
+            @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestPart(value = "imagen", required = false) MultipartFile imagen,
+            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
     ) {
-        System.out.println("\n=== 🟢 NUEVA PETICIÓN CREATE PRODUCTO ===");
-        System.out.println("➡ Nombre: " + nombre + " | Disponible: " + disponible);
-
         ProductoDTO dto = new ProductoDTO();
         dto.setNombre(nombre);
         dto.setPrecio(precio);
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
-        dto.setDisponible(disponible != null ? disponible : true); // Fallback de seguridad
+        dto.setDisponible(disponible != null ? disponible : true);
 
-        // Mapeo de categoría
         CategoriaDTO catDto = new CategoriaDTO();
         catDto.setId(categoriaId);
         dto.setCategoria(catDto);
 
-        ProductoDTO saved = productoService.save(dto, imagen);
+        List<VarianteDTO> variantes = parseVariantes(variantesJson);
+        List<MultipartFile> todasLasImagenes = combinarImagenes(imagen, imagenes);
 
-        System.out.println("✅ Producto guardado con éxito. Estado: " + (saved.getDisponible() ? "DISPONIBLE" : "OCULTO"));
-        System.out.println("==========================================\n");
-
+        ProductoDTO saved = productoService.save(dto, imagen, todasLasImagenes, variantes);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    // =====================================================
-    // UPDATE (Optimizado para Multipart)
-    // =====================================================
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductoDTO> update(
             @PathVariable Long id,
@@ -84,36 +74,48 @@ public class ProductoController {
             @RequestParam("stock") Integer stock,
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
-            @RequestParam(value = "disponible", required = false) Boolean disponible, // 🔥 Capturamos el cambio de switch
-            @RequestPart(value = "imagen", required = false) MultipartFile imagen
+            @RequestParam(value = "disponible", required = false) Boolean disponible,
+            @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestPart(value = "imagen", required = false) MultipartFile imagen,
+            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
     ) {
-        System.out.println("\n=== 🟡 NUEVA PETICIÓN UPDATE PRODUCTO ===");
-        System.out.println("➡ Editando ID: " + id + " | Nuevo Estado Disponible: " + disponible);
-
         ProductoDTO dto = new ProductoDTO();
         dto.setId(id);
         dto.setNombre(nombre);
         dto.setPrecio(precio);
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
-
-        // Es vital que si 'disponible' llega nulo, se mantenga el valor que el Service determine
         dto.setDisponible(disponible);
 
         CategoriaDTO catDto = new CategoriaDTO();
         catDto.setId(categoriaId);
         dto.setCategoria(catDto);
 
-        ProductoDTO updated = productoService.update(dto, imagen);
+        List<VarianteDTO> variantes = parseVariantes(variantesJson);
+        List<MultipartFile> todasLasImagenes = combinarImagenes(imagen, imagenes);
+
+        ProductoDTO updated = productoService.update(dto, imagen, todasLasImagenes, variantes);
         return ResponseEntity.ok(updated);
     }
 
-    // =====================================================
-    // DELETE
-    // =====================================================
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productoService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    private List<VarianteDTO> parseVariantes(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<VarianteDTO>>() {});
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Formato inválido para variantes: " + e.getMessage());
+        }
+    }
+
+    private List<MultipartFile> combinarImagenes(MultipartFile imagen, List<MultipartFile> imagenes) {
+        List<MultipartFile> todas = new ArrayList<>();
+        if (imagenes != null) todas.addAll(imagenes);
+        return todas;
     }
 }
