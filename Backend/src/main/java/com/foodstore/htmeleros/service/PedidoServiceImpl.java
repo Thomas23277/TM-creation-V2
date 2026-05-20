@@ -191,7 +191,9 @@ public class PedidoServiceImpl implements PedidoService {
             detalle.setPrecioUnitario(precioUnitario);
             detalle.setNombreTamano(nombreTamano);
 
-            total += detalle.getSubtotal();
+            double subtotal = precioUnitario * detDTO.getCantidad();
+            detalle.setSubtotal(subtotal);
+            total += subtotal;
             detallesFinales.add(detalle);
         }
 
