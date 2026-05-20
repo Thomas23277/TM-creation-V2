@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.dto.UsuarioDTO;
@@ -20,6 +21,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Autowired
     private UsuarioRepository usuariorepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository) {
     }
@@ -105,8 +109,36 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         return UsuarioMapper.toDTO(usuario);
     }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public UsuarioDTO updateProfile(Long id, String nombre, String apellido, int celular) {
+        Usuario actual = usuariorepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        actual.setNombre(nombre);
+        actual.setApellido(apellido);
+        actual.setCelular(celular);
+
+        return UsuarioMapper.toDTO(usuariorepository.save(actual));
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void changePassword(Long id, String contraseniaActual, String contraseniaNueva) {
+        Usuario actual = usuariorepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        // Verify current password via BCrypt (Spring Security users)
+        if (!passwordEncoder.matches(contraseniaActual, actual.getContrasenia())) {
+            // Fallback: try SHA-256 (legacy users)
+            String shaHash = Sha256Util.hash(contraseniaActual);
+            if (!shaHash.equals(actual.getContrasenia())) {
+                throw new IllegalArgumentException("La contraseña actual no es correcta");
+            }
+        }
+
+        actual.setContrasenia(passwordEncoder.encode(contraseniaNueva));
+        usuariorepository.save(actual);
+    }
 }
-
-
-
-

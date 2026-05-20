@@ -11,4 +11,7 @@ public interface UsuarioService {
     UsuarioDTO update(Long id, UsuarioDTO nuevo);
     UsuarioDTO findByEmail(String email);
     UsuarioDTO login(String email, String contraseniaPlano);
+
+    UsuarioDTO updateProfile(Long id, String nombre, String apellido, int celular);
+    void changePassword(Long id, String contraseniaActual, String contraseniaNueva);
 }

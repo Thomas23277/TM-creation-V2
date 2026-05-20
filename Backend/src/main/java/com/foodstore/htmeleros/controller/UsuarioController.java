@@ -1,5 +1,7 @@
 package com.foodstore.htmeleros.controller;
 import com.foodstore.htmeleros.auth.dto.LoginRequest;
+import com.foodstore.htmeleros.dto.ChangePasswordRequest;
+import com.foodstore.htmeleros.dto.UpdateProfileRequest;
 import com.foodstore.htmeleros.dto.UsuarioDTO;
 import com.foodstore.htmeleros.enums.Rol;
 import com.foodstore.htmeleros.service.UsuarioService;
@@ -70,6 +72,22 @@ public class UsuarioController {
         UsuarioDTO usuario = usuarioService.findByEmail(email);
         if (usuario != null) return ResponseEntity.ok(usuario);
         return ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/{id}/perfil")
+    public ResponseEntity<UsuarioDTO> actualizarPerfil(@PathVariable Long id, @Valid @RequestBody UpdateProfileRequest req) {
+        UsuarioDTO actualizado = usuarioService.updateProfile(id, req.getNombre(), req.getApellido(), req.getCelular());
+        return ResponseEntity.ok(actualizado);
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> cambiarPassword(@PathVariable Long id, @Valid @RequestBody ChangePasswordRequest req) {
+        try {
+            usuarioService.changePassword(id, req.getContraseniaActual(), req.getContraseniaNueva());
+            return ResponseEntity.ok("Contraseña actualizada correctamente");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
 }
