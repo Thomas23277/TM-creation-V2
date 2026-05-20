@@ -13,7 +13,7 @@ public interface ProductoService {
 
     ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes);
 
-    ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes);
+    ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<Long> imagenesEliminarIds);
 
     void deleteById(Long id);
 

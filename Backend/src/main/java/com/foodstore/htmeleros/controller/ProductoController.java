@@ -77,7 +77,8 @@ public class ProductoController {
             @RequestParam(value = "disponible", required = false) Boolean disponible,
             @RequestParam(value = "variantes", required = false) String variantesJson,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen,
-            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
+            @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes,
+            @RequestParam(value = "imagenesEliminarIds", required = false) String imagenesEliminarIds
     ) {
         ProductoDTO dto = new ProductoDTO();
         dto.setId(id);
@@ -93,8 +94,9 @@ public class ProductoController {
 
         List<VarianteDTO> variantes = parseVariantes(variantesJson);
         List<MultipartFile> todasLasImagenes = combinarImagenes(imagen, imagenes);
+        List<Long> idsAEliminar = parseIdList(imagenesEliminarIds);
 
-        ProductoDTO updated = productoService.update(dto, imagen, todasLasImagenes, variantes);
+        ProductoDTO updated = productoService.update(dto, imagen, todasLasImagenes, variantes, idsAEliminar);
         return ResponseEntity.ok(updated);
     }
 
@@ -117,5 +119,14 @@ public class ProductoController {
         List<MultipartFile> todas = new ArrayList<>();
         if (imagenes != null) todas.addAll(imagenes);
         return todas;
+    }
+
+    private List<Long> parseIdList(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Long>>() {});
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Formato inválido para ids: " + e.getMessage());
+        }
     }
 }

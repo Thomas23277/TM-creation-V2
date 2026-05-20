@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.service;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
@@ -110,7 +111,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes) {
+    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<Long> imagenesEliminarIds) {
         Producto existente = productoRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
@@ -140,17 +141,33 @@ public class ProductoServiceImpl implements ProductoService {
             }
         }
 
+        if (imagenesEliminarIds != null && !imagenesEliminarIds.isEmpty()) {
+            Iterator<ProductoImagen> it = existente.getImagenes().iterator();
+            while (it.hasNext()) {
+                ProductoImagen pi = it.next();
+                if (imagenesEliminarIds.contains(pi.getId())) {
+                    uploadService.deleteImage(pi.getUrlImagen());
+                    it.remove();
+                }
+            }
+        }
+
         List<String> urls = subirImagenes(imagen, imagenesAdicionales);
         if (!urls.isEmpty()) {
-            existente.getImagenes().clear();
-            existente.setUrlImagen(urls.get(0));
+            int startOrden = existente.getImagenes().size();
             for (int i = 0; i < urls.size(); i++) {
                 ProductoImagen pi = new ProductoImagen();
                 pi.setUrlImagen(urls.get(i));
-                pi.setOrden(i);
+                pi.setOrden(startOrden + i);
                 pi.setProducto(existente);
                 existente.getImagenes().add(pi);
             }
+        }
+
+        if (!existente.getImagenes().isEmpty()) {
+            existente.setUrlImagen(existente.getImagenes().get(0).getUrlImagen());
+        } else {
+            existente.setUrlImagen(null);
         }
 
         return ProductoMapper.toDTO(productoRepository.save(existente));
