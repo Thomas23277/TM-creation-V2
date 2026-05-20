@@ -18,6 +18,8 @@ public class DetallePedidoMapper {
 
         if (detalle.getProducto() != null) {
             dto.setProductoId(detalle.getProducto().getId());
+            dto.setProductoNombre(detalle.getProducto().getNombre());
+            dto.setProductoImagen(normalizarUrl(detalle.getProducto().getUrlImagen()));
         }
 
         if (detalle.getVariante() != null) {
@@ -51,5 +53,16 @@ public class DetallePedidoMapper {
         detalle.setNombreTamano(dto.getNombreTamano());
 
         return detalle;
+    }
+
+    private static String normalizarUrl(String url) {
+        if (url == null || url.isBlank()) return null;
+        url = url.replace("\\", "/");
+        if (url.startsWith("productos/")) {
+            return "/uploads/" + url;
+        } else if (!url.startsWith("/uploads/")) {
+            return "/uploads/productos/" + url;
+        }
+        return url;
     }
 }

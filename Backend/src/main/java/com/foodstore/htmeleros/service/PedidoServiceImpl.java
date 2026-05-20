@@ -93,6 +93,8 @@ public class PedidoServiceImpl implements PedidoService {
         PedidoDTO base = new PedidoDTO();
         base.setUsuarioId(checkoutDTO.getUsuarioId());
         base.setDireccionEntrega(checkoutDTO.getDireccionEntrega());
+        base.setMetodoPago(checkoutDTO.getMetodoPago());
+        base.setTelefonoContacto(checkoutDTO.getTelefono());
         base.setDetalles(checkoutDTO.getDetalles());
 
         // Lógica de creación, validación de stock y guardado en DB
@@ -152,6 +154,8 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setFecha(LocalDateTime.now());
         pedido.setEstado(Estado.PENDIENTE);
         pedido.setDireccionEntrega(dto.getDireccionEntrega());
+        pedido.setMetodoPago(dto.getMetodoPago());
+        pedido.setTelefonoContacto(dto.getTelefonoContacto());
 
         List<DetallePedido> detallesFinales = new ArrayList<>();
         double total = 0.0;

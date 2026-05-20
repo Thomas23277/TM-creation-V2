@@ -54,6 +54,12 @@ public class Pedido {
     @Column(length = 500)
     private String direccionEntrega;
 
+    @Column(length = 100)
+    private String metodoPago;
+
+    @Column(length = 50)
+    private String telefonoContacto;
+
     /* ======================================================
        MÉTODOS HELPER PARA RELACIÓN BIDIRECCIONAL SEGURA
     ====================================================== */

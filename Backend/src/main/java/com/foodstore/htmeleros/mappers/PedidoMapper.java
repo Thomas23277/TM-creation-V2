@@ -15,6 +15,9 @@ public class PedidoMapper {
         dto.setEstado(p.getEstado());
         dto.setTotal(p.getTotal());
         dto.setDireccionEntrega(p.getDireccionEntrega());
+        dto.setMetodoPago(p.getMetodoPago());
+        dto.setTelefonoContacto(p.getTelefonoContacto());
+        dto.setFechaActualizacion(p.getFechaActualizacion());
 
         if (p.getUsuario() != null) {
             dto.setUsuarioId(p.getUsuario().getId());

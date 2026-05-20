@@ -29,19 +29,8 @@ public class ProductoMapper {
         // 🔥 En la Entity el método sigue siendo isDisponible() (porque es boolean primitivo)
         dto.setDisponible(producto.isDisponible());
 
-        // Normalizar URL para frontend
-        if (producto.getUrlImagen() != null && !producto.getUrlImagen().isBlank()) {
-            String url = producto.getUrlImagen().replace("\\", "/");
-            // Limpiamos prefijos duplicados para que el frontend reciba una ruta limpia
-            if (url.startsWith("productos/")) {
-                url = "/uploads/" + url;
-            } else if (!url.startsWith("/uploads/")) {
-                url = "/uploads/productos/" + url;
-            }
-            dto.setUrlImagen(url);
-        } else {
-            dto.setUrlImagen(null);
-        }
+        String urlNormalizada = normalizarUrl(producto.getUrlImagen());
+        dto.setUrlImagen(urlNormalizada);
 
         if (producto.getCategoria() != null) {
             dto.setCategoria(CategoriaMapper.toDTO(producto.getCategoria()));
@@ -56,7 +45,7 @@ public class ProductoMapper {
 
         if (producto.getImagenes() != null) {
             dto.setImagenes(producto.getImagenes().stream()
-                    .map(img -> new ProductoImagenDTO(img.getId(), img.getUrlImagen(), img.getOrden()))
+                    .map(img -> new ProductoImagenDTO(img.getId(), normalizarUrl(img.getUrlImagen()), img.getOrden()))
                     .toList());
         }
 
@@ -125,5 +114,16 @@ public class ProductoMapper {
         Producto p = new Producto();
         p.setId(id);
         return p;
+    }
+
+    private static String normalizarUrl(String url) {
+        if (url == null || url.isBlank()) return null;
+        url = url.replace("\\", "/");
+        if (url.startsWith("productos/")) {
+            return "/uploads/" + url;
+        } else if (!url.startsWith("/uploads/")) {
+            return "/uploads/productos/" + url;
+        }
+        return url;
     }
 }

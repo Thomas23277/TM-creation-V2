@@ -14,6 +14,7 @@ public class CheckoutDTO {
 
     private String direccionEntrega;
     private String emailCliente;
+    private String metodoPago;
 
     private List<DetallePedidoDTO> detalles;
 }

@@ -29,4 +29,8 @@ public class PedidoDTO {
     private String usuarioNombre;
 
     private String direccionEntrega;
+
+    private String metodoPago;
+    private String telefonoContacto;
+    private LocalDateTime fechaActualizacion;
 }
