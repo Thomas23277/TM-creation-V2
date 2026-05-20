@@ -10,6 +10,9 @@ import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
 import com.foodstore.htmeleros.enums.Rol;
 import com.foodstore.htmeleros.auth.util.Sha256Util;
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Statement;
 
 @SpringBootApplication
 @ComponentScan(basePackages = {
@@ -49,6 +52,19 @@ public class HtmelerosApplication {
                 System.out.println("[FoodStore] Admin creado: " + adminEmail + " / " + adminPass);
             } else {
                 System.out.println("[FoodStore] Admin ya existe: " + adminEmail);
+            }
+        };
+    }
+
+    @Bean
+    public CommandLineRunner migrateCelularColum(DataSource dataSource) {
+        return args -> {
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE usuarios MODIFY COLUMN celular VARCHAR(50)");
+                System.out.println("[Migration] Columna celular migrada a VARCHAR(50)");
+            } catch (Exception e) {
+                System.out.println("[Migration] Columna celular ya está en VARCHAR o no aplica: " + e.getMessage());
             }
         };
     }

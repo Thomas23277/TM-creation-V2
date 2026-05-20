@@ -10,5 +10,5 @@ public class UpdateProfileRequest {
 
     private String apellido;
 
-    private int celular;
+    private String celular;
 }

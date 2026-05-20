@@ -23,7 +23,7 @@ public class Usuario {
 
     // Celular opcional (no se pide en register)
     @Column(nullable = true)
-    private int celular;
+    private String celular;
 
     @Column(unique = true, nullable = false)
     private String email;

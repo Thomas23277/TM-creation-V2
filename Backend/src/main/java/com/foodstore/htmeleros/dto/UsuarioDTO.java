@@ -23,7 +23,7 @@ public class UsuarioDTO {
     private String email;
 
     // Celular opcional
-    private int celular;
+    private String celular;
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres o una mayuscula.")

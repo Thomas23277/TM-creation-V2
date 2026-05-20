@@ -112,7 +112,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @org.springframework.transaction.annotation.Transactional
-    public UsuarioDTO updateProfile(Long id, String nombre, String apellido, int celular) {
+    public UsuarioDTO updateProfile(Long id, String nombre, String apellido, String celular) {
         Usuario actual = usuariorepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
