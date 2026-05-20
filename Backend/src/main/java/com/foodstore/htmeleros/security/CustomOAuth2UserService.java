@@ -57,7 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             nuevoUsuario.setApellido(familyName);
             nuevoUsuario.setRol(Rol.USUARIO);
-            nuevoUsuario.setCelular(0);
+            nuevoUsuario.setCelular("");
 
             String randomPassword = UUID.randomUUID().toString();
             nuevoUsuario.setContrasenia(Sha256Util.hash(randomPassword));
