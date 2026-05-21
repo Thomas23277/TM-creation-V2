@@ -13,8 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
+import com.foodstore.htmeleros.service.EmailService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -28,25 +27,20 @@ public class PedidoController {
     private PedidoService pedidoService;
 
     @Autowired
-    private JavaMailSender mailSender;
+    private EmailService emailService;
 
     // ============================================================
-    //                   TEST EMAIL (diagnóstico SMTP)
+    //                   TEST EMAIL (diagnóstico API Resend)
     // ============================================================
     @GetMapping("/test-email")
     public ResponseEntity<?> testEmail() {
-        log.info("🧪 TEST EMAIL ENDPOINT INVOCADO");
+        log.info("TEST EMAIL ENDPOINT INVOCADO");
         try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setFrom("tmcreation233@gmail.com");
-            msg.setTo("tmcreation233@gmail.com");
-            msg.setSubject("🧪 Test SMTP - TM Creation");
-            msg.setText("Si recibís esto, el SMTP de Resend funciona correctamente.");
-            mailSender.send(msg);
-            log.info("✅ TEST EMAIL ENVIADO EXITOSAMENTE");
-            return ResponseEntity.ok(Map.of("message", "✅ Email de prueba enviado a tmcreation233@gmail.com"));
+            emailService.enviarEmailPrueba();
+            log.info("Email de prueba enviado via Resend API");
+            return ResponseEntity.ok(Map.of("message", "Email de prueba procesado (ver logs para resultado)"));
         } catch (Exception e) {
-            log.error("❌ Test email falló: {}", e.getMessage(), e);
+            log.error("Test email fallo: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", e.getMessage()));
         }
