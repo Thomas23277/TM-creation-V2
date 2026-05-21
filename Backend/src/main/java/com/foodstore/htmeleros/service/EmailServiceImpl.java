@@ -24,7 +24,7 @@ public class EmailServiceImpl implements EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
 
-    private static final String RESEND_API_URL = "https://api.resend.com/emails";
+    private static final String BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
     private static final String WHATSAPP_LINK = "https://wa.me/5492616524913";
 
     private final HttpClient httpClient = HttpClient.newBuilder()
@@ -33,7 +33,7 @@ public class EmailServiceImpl implements EmailService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Value("${app.email.from:onboarding@resend.dev}")
+    @Value("${app.email.from}")
     private String emailFrom;
 
     @Value("${app.admin.email}")
@@ -52,32 +52,32 @@ public class EmailServiceImpl implements EmailService {
 
     @PostConstruct
     public void init() {
-        this.apiKey = System.getenv("RESEND_API_KEY");
-        log.info("EmailService iniciado (REST API - no SMTP)");
+        this.apiKey = System.getenv("BREVO_API_KEY");
+        log.info("EmailService iniciado (Brevo REST API)");
         log.info("From: {}", emailFrom);
         log.info("Admin: {}", adminEmail);
-        log.info("RESEND_API_KEY presente: {}", apiKey != null && !apiKey.isEmpty());
+        log.info("BREVO_API_KEY presente: {}", apiKey != null && !apiKey.isEmpty());
     }
 
     private boolean sendEmail(String to, String subject, String htmlBody) {
         if (apiKey == null || apiKey.isEmpty()) {
-            log.warn("RESEND_API_KEY no configurada, no se puede enviar email");
+            log.warn("BREVO_API_KEY no configurada, no se puede enviar email");
             return false;
         }
 
         try {
             Map<String, Object> body = new LinkedHashMap<>();
-            body.put("from", "TM Creation <" + emailFrom + ">");
-            body.put("to", List.of(to));
+            body.put("sender", Map.of("name", "TM Creation", "email", emailFrom));
+            body.put("to", List.of(Map.of("email", to)));
             body.put("subject", subject);
-            body.put("html", htmlBody);
+            body.put("htmlContent", htmlBody);
 
             String json = objectMapper.writeValueAsString(body);
-            log.debug("Enviando email a {} via Resend API", to);
+            log.debug("Enviando email a {} via Brevo API", to);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(RESEND_API_URL))
-                    .header("Authorization", "Bearer " + apiKey)
+                    .uri(URI.create(BREVO_API_URL))
+                    .header("api-key", apiKey)
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .timeout(Duration.ofSeconds(15))
@@ -85,7 +85,7 @@ public class EmailServiceImpl implements EmailService {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() == 200) {
+            if (response.statusCode() == 201) {
                 log.info("Email enviado a {}", to);
                 return true;
             }
@@ -102,7 +102,7 @@ public class EmailServiceImpl implements EmailService {
     public void enviarEmailPrueba() {
         sendEmail(adminEmail,
                 "Test de Email - TM Creation",
-                "<h1>Si recibis esto, la API de Resend funciona correctamente!</h1><p>Este es un email de prueba enviado desde la REST API.</p>");
+                "<h1>Si recibis esto, la API de Brevo funciona correctamente!</h1><p>Este es un email de prueba enviado desde la REST API.</p>");
     }
 
     @Override
