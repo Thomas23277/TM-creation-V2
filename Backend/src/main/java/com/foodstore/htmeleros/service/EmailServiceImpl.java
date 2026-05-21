@@ -2,6 +2,8 @@ package com.foodstore.htmeleros.service;
 
 import com.foodstore.htmeleros.entity.DetallePedido;
 import com.foodstore.htmeleros.entity.Pedido;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,6 +14,8 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 public class EmailServiceImpl implements EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     @Autowired
     private JavaMailSender mailSender;
@@ -43,8 +47,9 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setText(generarHtmlClienteProfesional(pedido, nombreCliente), true);
             mailSender.send(mensaje);
+            log.info("✅ Email de confirmación enviado a {}", emailCliente);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("❌ Error enviando confirmación al cliente {}: {}", emailCliente, e.getMessage(), e);
         }
     }
 
@@ -60,8 +65,9 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setText(generarHtmlAdminProfesional(pedido, nombreFormulario, telefonoFormulario, emailFormulario), true);
             mailSender.send(mensaje);
+            log.info("✅ Notificación de pedido #{} enviada al admin", pedido.getId());
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("❌ Error enviando notificación al admin para pedido #{}: {}", pedido.getId(), e.getMessage(), e);
         }
     }
 
@@ -77,8 +83,9 @@ public class EmailServiceImpl implements EmailService {
 
             helper.setText(generarHtmlNuevaResena(nombreUsuario, nombreProducto, estrellas, comentario), true);
             mailSender.send(mensaje);
+            log.info("✅ Notificación de reseña enviada al admin");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("❌ Error enviando notificación de reseña: {}", e.getMessage(), e);
         }
     }
 

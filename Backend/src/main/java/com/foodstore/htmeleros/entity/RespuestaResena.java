@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -37,7 +38,7 @@ public class RespuestaResena {
     @PrePersist
     public void prePersist() {
         if (this.fecha == null) {
-            this.fecha = LocalDateTime.now();
+            this.fecha = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires"));
         }
     }
 }

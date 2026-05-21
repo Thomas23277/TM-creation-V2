@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,8 @@ import com.foodstore.htmeleros.repository.ProductoRepository;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
 import com.foodstore.htmeleros.repository.VarianteRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -47,6 +50,8 @@ public class PedidoServiceImpl implements PedidoService {
     @Autowired
     private EmailService emailService;
 
+    private static final Logger log = LoggerFactory.getLogger(PedidoServiceImpl.class);
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -57,7 +62,7 @@ public class PedidoServiceImpl implements PedidoService {
     @Transactional
     @Scheduled(fixedRate = 3600000)
     public void cancelarPedidosVencidos() {
-        LocalDateTime limite = LocalDateTime.now().minusHours(72);
+        LocalDateTime limite = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")).minusHours(72);
         List<Pedido> pedidos = repository.findAll();
 
         for (Pedido pedido : pedidos) {
@@ -100,6 +105,9 @@ public class PedidoServiceImpl implements PedidoService {
         // Lógica de creación, validación de stock y guardado en DB
         Pedido pedido = procesarPedido(base);
 
+        // Forzar inicialización de datos lazy antes de enviar emails
+        inicializarDetalles(pedido);
+
         // Envío de correos electrónicos
         try {
             // 1. Correo al CLIENTE (usando datos del formulario)
@@ -128,9 +136,7 @@ public class PedidoServiceImpl implements PedidoService {
             );
 
         } catch (Exception e) {
-            // Logueamos el error pero no revertimos la compra (el pedido ya se guardó)
-            System.err.println("Error enviando notificaciones de correo: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error enviando notificaciones de correo: {}", e.getMessage(), e);
         }
 
         return PedidoMapper.toDTO(pedido);
@@ -151,7 +157,7 @@ public class PedidoServiceImpl implements PedidoService {
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
-        pedido.setFecha(LocalDateTime.now());
+        pedido.setFecha(LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")));
         pedido.setEstado(Estado.PENDIENTE);
         pedido.setDireccionEntrega(dto.getDireccionEntrega());
         pedido.setMetodoPago(dto.getMetodoPago());

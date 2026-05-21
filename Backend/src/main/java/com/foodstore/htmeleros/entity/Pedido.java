@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.entity;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +86,7 @@ public class Pedido {
     @PrePersist
     public void prePersist() {
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires"));
 
         if (fecha == null) {
             fecha = now;
@@ -100,6 +101,6 @@ public class Pedido {
 
     @PreUpdate
     public void preUpdate() {
-        fechaActualizacion = LocalDateTime.now();
+        fechaActualizacion = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires"));
     }
 }
