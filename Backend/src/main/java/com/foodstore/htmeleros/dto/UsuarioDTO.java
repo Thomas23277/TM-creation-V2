@@ -30,5 +30,6 @@ public class UsuarioDTO {
     private String contrasenia;
 
     private Rol rol;
+    private String fotoPerfil;
     private List<PedidoDTO> pedidos;
 }

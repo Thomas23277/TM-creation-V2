@@ -2,6 +2,7 @@ package com.foodstore.htmeleros.service;
 
 import com.foodstore.htmeleros.dto.UsuarioDTO;
 import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface UsuarioService {
     UsuarioDTO save(UsuarioDTO usuarioDTO);
@@ -14,4 +15,5 @@ public interface UsuarioService {
 
     UsuarioDTO updateProfile(Long id, String nombre, String apellido, String celular);
     void changePassword(Long id, String contraseniaActual, String contraseniaNueva);
+    UsuarioDTO updateFotoPerfil(Long id, MultipartFile file);
 }

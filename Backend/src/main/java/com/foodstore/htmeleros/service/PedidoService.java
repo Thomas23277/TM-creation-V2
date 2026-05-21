@@ -37,4 +37,5 @@ public interface PedidoService {
     // 🔥 NUEVO: Cancelación automática
     // ============================
     void cancelarPedidosVencidos();
+    void deleteAll();
 }

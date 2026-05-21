@@ -64,7 +64,8 @@ public class AuthService {
                 saved.getNombre(),
                 saved.getApellido(),
                 saved.getEmail(),
-                saved.getRol().name()
+                saved.getRol().name(),
+                saved.getFotoPerfil()
         );
     }
 
@@ -95,7 +96,8 @@ public class AuthService {
                     usuario.getNombre(),
                     usuario.getApellido(),
                     usuario.getEmail(),
-                    usuario.getRol().name()
+                    usuario.getRol().name(),
+                    usuario.getFotoPerfil()
             );
 
         } catch (BadCredentialsException ex) {

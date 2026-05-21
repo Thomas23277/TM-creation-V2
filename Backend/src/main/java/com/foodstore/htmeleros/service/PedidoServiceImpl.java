@@ -323,4 +323,10 @@ public class PedidoServiceImpl implements PedidoService {
                 .map(PedidoMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional
+    public void deleteAll() {
+        repository.deleteAll();
+    }
 }

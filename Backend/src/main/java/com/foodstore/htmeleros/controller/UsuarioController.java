@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,6 +89,16 @@ public class UsuarioController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @PostMapping("/{id}/foto-perfil")
+    public ResponseEntity<UsuarioDTO> subirFotoPerfil(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        UsuarioDTO actualizado = usuarioService.updateFotoPerfil(id, file);
+        return ResponseEntity.ok(actualizado);
+    }
+}
     }
 
 }

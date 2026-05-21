@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Data                   // genera getters, setters, toString, equals, hashCode
-@AllArgsConstructor     // genera constructor con todos los campos
-@NoArgsConstructor      // genera constructor vacío
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserResponse {
     private Long id;
     private String nombre;
@@ -15,4 +15,5 @@ public class UserResponse {
     private String email;
     @JsonProperty("role")
     private String rol;
+    private String fotoPerfil;
 }

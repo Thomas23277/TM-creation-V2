@@ -139,6 +139,16 @@ public class PedidoController {
         }
     }
 
+    @DeleteMapping
+    public ResponseEntity<?> eliminarTodos() {
+        try {
+            pedidoService.deleteAll();
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
     // ============================================================
     //                   LISTAR POR USUARIO
     // ============================================================

@@ -14,6 +14,7 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.UsuarioMapper;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
 import com.foodstore.htmeleros.auth.util.Sha256Util;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UsuarioServiceImpl implements UsuarioService {
@@ -24,6 +25,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UploadService uploadService;
 
     public UsuarioServiceImpl(UsuarioRepository usuarioRepository) {
     }
@@ -140,5 +144,17 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         actual.setContrasenia(passwordEncoder.encode(contraseniaNueva));
         usuariorepository.save(actual);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public UsuarioDTO updateFotoPerfil(Long id, MultipartFile file) {
+        Usuario usuario = usuariorepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        String url = uploadService.uploadImage(file, "perfiles");
+        usuario.setFotoPerfil(url);
+
+        return UsuarioMapper.toDTO(usuariorepository.save(usuario));
     }
 }

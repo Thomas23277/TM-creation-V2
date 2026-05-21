@@ -18,6 +18,7 @@ public class UsuarioMapper {
         usuario.setCelular(dto.getCelular());
         usuario.setContrasenia(dto.getContrasenia());
         usuario.setRol(dto.getRol());
+        usuario.setFotoPerfil(dto.getFotoPerfil());
 
         return usuario;
     }
@@ -35,6 +36,7 @@ public class UsuarioMapper {
         dto.setCelular(usuario.getCelular());
         dto.setContrasenia(usuario.getContrasenia());
         dto.setRol(usuario.getRol());
+        dto.setFotoPerfil(usuario.getFotoPerfil());
 
         return dto;
     }

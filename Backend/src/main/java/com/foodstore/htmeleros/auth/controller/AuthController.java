@@ -110,7 +110,8 @@ public class AuthController {
                     "id", usuario.getId(),
                     "email", usuario.getEmail(),
                     "nombre", usuario.getNombre(),
-                    "rol", usuario.getRol().name()
+                    "rol", usuario.getRol().name(),
+                    "fotoPerfil", usuario.getFotoPerfil()
             ));
 
         } catch (Exception e) {
@@ -162,7 +163,8 @@ public class AuthController {
                 "id", usuario.getId(),
                 "email", usuario.getEmail(),
                 "nombre", usuario.getNombre(),
-                "rol", usuario.getRol().name()
+                "rol", usuario.getRol().name(),
+                "fotoPerfil", usuario.getFotoPerfil()
         ));
     }
 
