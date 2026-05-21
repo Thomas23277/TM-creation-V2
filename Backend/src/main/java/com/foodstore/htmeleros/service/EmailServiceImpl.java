@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -86,7 +87,7 @@ public class EmailServiceImpl implements EmailService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 201) {
-                log.info("Email enviado a {}", to);
+                log.info("✅ Email enviado a {}", to);
                 return true;
             }
 
@@ -102,7 +103,12 @@ public class EmailServiceImpl implements EmailService {
     public void enviarEmailPrueba() {
         sendEmail(adminEmail,
                 "Test de Email - TM Creation",
-                "<h1>Si recibis esto, la API de Brevo funciona correctamente!</h1><p>Este es un email de prueba enviado desde la REST API.</p>");
+                """
+                <div style="font-family: sans-serif; text-align: center; padding: 40px;">
+                    <h1 style="color: #0f172a;">Si recib\u00eds esto, la API de Brevo funciona correctamente!</h1>
+                    <p style="color: #64748b; font-size: 16px;">Email enviado desde la REST API de Brevo.</p>
+                </div>
+                """);
     }
 
     @Override
@@ -115,158 +121,509 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void enviarNotificacionAdmin(Pedido pedido, String nombreFormulario, String telefonoFormulario, String emailFormulario) {
         sendEmail(adminEmail,
-                "NUEVO PEDIDO #" + pedido.getId() + " - " + nombreFormulario,
+                "Nuevo Pedido #" + pedido.getId() + " - " + nombreFormulario,
                 generarHtmlAdminProfesional(pedido, nombreFormulario, telefonoFormulario, emailFormulario));
     }
 
     @Override
     public void enviarNotificacionNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
         sendEmail(adminEmail,
-                "NUEVA RESE\u00d1A - " + nombreProducto + " - " + nombreUsuario,
+                "Nueva Rese\u00f1a - " + nombreProducto + " - " + nombreUsuario,
                 generarHtmlNuevaResena(nombreUsuario, nombreProducto, estrellas, comentario));
     }
 
+    private String generarGoogleMapsLink(String direccion) {
+        if (direccion == null || direccion.isBlank()) return null;
+        try {
+            return "https://www.google.com/maps/search/?api=1&query="
+                    + URLEncoder.encode(direccion, "UTF-8");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String formatearMetodoPago(String metodo) {
+        if (metodo == null) return "No especificado";
+        return switch (metodo.toLowerCase()) {
+            case "transferencia" -> "Transferencia Bancaria";
+            case "efectivo" -> "Efectivo";
+            case "mercadopago" -> "Mercado Pago";
+            case "tarjeta" -> "Tarjeta de D\u00e9bito/Cr\u00e9dito";
+            default -> metodo;
+        };
+    }
+
+    // ============================================================
+    // EMAIL CLIENTE
+    // ============================================================
+    private String generarHtmlClienteProfesional(Pedido pedido, String nombre) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String fechaFormateada = pedido.getFecha().format(formatter);
+        String mapsLink = generarGoogleMapsLink(pedido.getDireccionEntrega());
+        String metodoPagoFormateado = formatearMetodoPago(pedido.getMetodoPago());
+        boolean esTransferencia = pedido.getMetodoPago() != null
+                && pedido.getMetodoPago().equalsIgnoreCase("transferencia");
+
+        StringBuilder itemsHtml = new StringBuilder();
+        for (DetallePedido det : pedido.getDetalles()) {
+            String talleHtml = "";
+            if (det.getNombreTamano() != null && !det.getNombreTamano().isBlank()) {
+                talleHtml = """
+                    <span style="background-color: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; display: inline-block;">
+                        %s
+                    </span>
+                    """.formatted(det.getNombreTamano());
+            }
+            itemsHtml.append("""
+                <tr>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0;">
+                        <div style="font-weight: 600; color: #0f172a;">%s</div>
+                        %s
+                    </td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">%d</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #0f172a; font-weight: 500;">$%.2f</td>
+                </tr>
+                """.formatted(
+                    det.getProducto().getNombre(),
+                    talleHtml,
+                    det.getCantidad(),
+                    det.getSubtotal()
+            ));
+        }
+
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif;">
+                <table align="center" width="100%%" cellpadding="0" cellspacing="0">
+                <tr><td align="center" style="padding: 30px 15px;">
+                    <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%%;">
+
+                        <!-- HEADER -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 35px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 28px; letter-spacing: 2px; font-weight: 800;">TM CREATION</h1>
+                                <p style="margin: 12px 0 0; color: #94a3b8; font-size: 16px;">Gracias por tu compra, %s!</p>
+                            </td>
+                        </tr>
+
+                        <!-- BODY -->
+                        <tr>
+                            <td style="background: #ffffff; padding: 35px 30px;">
+
+                                <!-- ORDER STATUS -->
+                                <div style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: center;">
+                                    <div style="font-size: 14px; color: #92400e; margin-bottom: 4px;">Pedido #%d</div>
+                                    <div style="font-size: 22px; font-weight: 700; color: #78350f;">Estado: Pendiente</div>
+                                    <div style="font-size: 13px; color: #92400e; margin-top: 4px;">%s</div>
+                                </div>
+
+                                <!-- DELIVERY INFO -->
+                                <h3 style="color: #0f172a; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin: 25px 0 12px;">Direcci\u00f3n de Entrega</h3>
+                                <div style="background: #f8fafc; border-radius: 10px; padding: 16px; margin-bottom: 25px;">
+                                    <p style="margin: 0 0 8px; color: #334155; font-size: 15px;">
+                                        %s
+                                    </p>
+                                    %s
+                                    <p style="margin: 8px 0 0; color: #64748b; font-size: 14px;">
+                                        Tel\u00e9fono de contacto: <strong>%s</strong>
+                                    </p>
+                                    <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">
+                                        M\u00e9todo de pago: <strong>%s</strong>
+                                    </p>
+                                </div>
+
+                                %s
+
+                                <!-- PRODUCTS TABLE -->
+                                <h3 style="color: #0f172a; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin: 25px 0 12px;">Productos</h3>
+                                <table width="100%%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: #f1f5f9;">
+                                            <th style="padding: 10px 8px; text-align: left; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Producto</th>
+                                            <th style="padding: 10px 8px; text-align: center; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Cant.</th>
+                                            <th style="padding: 10px 8px; text-align: right; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        %s
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="2" style="padding: 14px 8px; text-align: right; font-size: 16px; font-weight: 700; color: #0f172a; border-top: 2px solid #1e293b;">TOTAL</td>
+                                            <td style="padding: 14px 8px; text-align: right; font-size: 18px; font-weight: 800; color: #0f172a; border-top: 2px solid #1e293b;">$%.2f</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                                <!-- PAYMENT INFO -->
+                                %s
+
+                                <!-- PROCESS -->
+                                <h3 style="color: #0f172a; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 15px;">Proceso de Confirmaci\u00f3n</h3>
+                                <table width="100%%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                                            <span style="display: inline-block; width: 26px; height: 26px; background: #2dd4bf; color: #0f172a; border-radius: 50%%; text-align: center; line-height: 26px; font-size: 13px; font-weight: 700; margin-right: 10px;">1</span>
+                                            Verificamos tu pago
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                                            <span style="display: inline-block; width: 26px; height: 26px; background: #2dd4bf; color: #0f172a; border-radius: 50%%; text-align: center; line-height: 26px; font-size: 13px; font-weight: 700; margin-right: 10px;">2</span>
+                                            Confirmamos tu direcci\u00f3n de entrega
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                                            <span style="display: inline-block; width: 26px; height: 26px; background: #2dd4bf; color: #0f172a; border-radius: 50%%; text-align: center; line-height: 26px; font-size: 13px; font-weight: 700; margin-right: 10px;">3</span>
+                                            Coordinamos el env\u00edo
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px 0;">
+                                            <span style="display: inline-block; width: 26px; height: 26px; background: #2dd4bf; color: #0f172a; border-radius: 50%%; text-align: center; line-height: 26px; font-size: 13px; font-weight: 700; margin-right: 10px;">4</span>
+                                            Recib\u00eds confirmaci\u00f3n final
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- SHIPPING -->
+                                <h3 style="color: #0f172a; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; margin: 30px 0 15px;">Pol\u00edtica de Env\u00edos</h3>
+                                <div style="background: #f8fafc; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
+                                    <ul style="margin: 0; padding-left: 20px; color: #475569; line-height: 1.8;">
+                                        <li><strong>Gran Mendoza:</strong> Tarifa fija de $3.500</li>
+                                        <li><strong>Zonas fuera del radio:</strong> Coordinamos punto intermedio</li>
+                                        <li><strong>Resto del pa\u00eds/mundo:</strong> Costo acordado seg\u00fan destino</li>
+                                    </ul>
+                                </div>
+
+                                <!-- GUARANTEE -->
+                                <div style="background: #f0fdfa; border: 1px solid #2dd4bf; border-radius: 10px; padding: 16px; margin: 20px 0;">
+                                    <p style="margin: 0; color: #0f766e; font-size: 14px;">
+                                        30 d\u00edas de garant\u00eda por fallas de fabricaci\u00f3n.
+                                    </p>
+                                </div>
+
+                                <!-- WHATSAPP CTA -->
+                                <div style="text-align: center; margin: 30px 0 10px;">
+                                    <p style="color: #64748b; font-size: 14px; margin-bottom: 14px;">Tienes alguna duda?</p>
+                                    <a href="%s" style="display: inline-block; background: #25d366; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 15px;">
+                                        Consultar por WhatsApp
+                                    </a>
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        <!-- FOOTER -->
+                        <tr>
+                            <td style="background: #0f172a; padding: 20px 30px; text-align: center; border-radius: 0 0 16px 16px;">
+                                <p style="margin: 0; color: #64748b; font-size: 12px;">TM Creation \u00a9 2026 \u2013 Todos los derechos reservados</p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td></tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(
+                nombre,
+                pedido.getId(),
+                fechaFormateada,
+                pedido.getDireccionEntrega() != null ? pedido.getDireccionEntrega() : "No especificada",
+                mapsLink != null
+                    ? "<a href=\"" + mapsLink + "\" style=\"color: #2563eb; font-size: 13px; text-decoration: none;\">Ver en Google Maps</a>"
+                    : "",
+                pedido.getTelefonoContacto() != null ? pedido.getTelefonoContacto() : "No especificado",
+                metodoPagoFormateado,
+                esTransferencia ? generarBloquePago() : "",
+                itemsHtml.toString(),
+                pedido.getTotal(),
+                esTransferencia ? "" : "",
+                WHATSAPP_LINK
+        );
+    }
+
+    private String generarBloquePago() {
+        return """
+            <div style="background: #f0fdfa; border: 1px solid #2dd4bf; border-radius: 10px; padding: 20px; margin: 25px 0;">
+                <h3 style="color: #0f766e; font-size: 15px; margin: 0 0 12px;">Datos para Transferencia</h3>
+                <table width="100%%" cellpadding="4" cellspacing="0">
+                    <tr>
+                        <td style="color: #475569; font-size: 13px; width: 80px;">Titular:</td>
+                        <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
+                    </tr>
+                    <tr>
+                        <td style="color: #475569; font-size: 13px;">CVU:</td>
+                        <td><code style="background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-size: 13px;">%s</code></td>
+                    </tr>
+                    <tr>
+                        <td style="color: #475569; font-size: 13px;">Alias:</td>
+                        <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
+                    </tr>
+                </table>
+                <div style="text-align: center; margin-top: 15px;">
+                    <p style="color: #475569; font-size: 13px; margin: 0 0 10px;">Envi\u00e1 el comprobante por WhatsApp:</p>
+                    <a href="%s" style="display: inline-block; background: #25d366; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 25px; font-weight: 600; font-size: 14px;">
+                        Enviar comprobante
+                    </a>
+                </div>
+            </div>
+            """.formatted(titular, cvu, alias, WHATSAPP_LINK);
+    }
+
+    // ============================================================
+    // EMAIL ADMIN
+    // ============================================================
+    private String generarHtmlAdminProfesional(Pedido pedido, String nombre, String telefono, String emailFormulario) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        String fechaFormateada = pedido.getFecha().format(formatter);
+        String mapsLink = generarGoogleMapsLink(pedido.getDireccionEntrega());
+        String metodoPagoFormateado = formatearMetodoPago(pedido.getMetodoPago());
+
+        StringBuilder filas = new StringBuilder();
+        for (DetallePedido det : pedido.getDetalles()) {
+            String talleInfo = "";
+            if (det.getNombreTamano() != null && !det.getNombreTamano().isBlank()) {
+                talleInfo = " <span style=\"color: #64748b; font-size: 12px;\">(" + det.getNombreTamano() + ")</span>";
+            }
+            filas.append("""
+                <tr>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0;">
+                        <div style="font-weight: 600; color: #0f172a;">%s%s</div>
+                    </td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: center; color: #475569;">%d</td>
+                    <td style="padding: 12px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; color: #475569;">$%.2f</td>
+                </tr>
+                """.formatted(
+                    det.getProducto().getNombre(),
+                    talleInfo,
+                    det.getCantidad(),
+                    det.getSubtotal()
+            ));
+        }
+
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif;">
+                <table align="center" width="100%%" cellpadding="0" cellspacing="0">
+                <tr><td align="center" style="padding: 30px 15px;">
+                    <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%%;">
+
+                        <!-- HEADER -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                <h1 style="margin: 0; color: #ffffff; font-size: 24px; letter-spacing: 1px;">Nuevo Pedido #%d</h1>
+                                <p style="margin: 8px 0 0; color: #c7d2fe; font-size: 14px;">%s</p>
+                            </td>
+                        </tr>
+
+                        <!-- BODY -->
+                        <tr>
+                            <td style="background: #ffffff; padding: 30px;">
+
+                                <!-- STATUS BADGE -->
+                                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 14px 18px; margin-bottom: 25px;">
+                                    <div style="font-size: 13px; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Estado</div>
+                                    <div style="font-size: 18px; font-weight: 700; color: #78350f;">%s</div>
+                                </div>
+
+                                <!-- CUSTOMER INFO -->
+                                <h3 style="color: #4f46e5; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Datos del Cliente</h3>
+                                <div style="background: #f8fafc; border-radius: 10px; padding: 18px; margin-bottom: 25px;">
+                                    <table width="100%%" cellpadding="3" cellspacing="0">
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px; width: 100px;">Nombre:</td>
+                                            <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">WhatsApp:</td>
+                                            <td>
+                                                <a href="https://wa.me/%s" style="color: #10b981; font-weight: 600; text-decoration: none;">%s</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">Email:</td>
+                                            <td><a href="mailto:%s" style="color: #6366f1; text-decoration: none;">%s</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">Tel\u00e9fono:</td>
+                                            <td style="color: #0f172a; font-weight: 500;">%s</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <!-- DELIVERY -->
+                                <h3 style="color: #4f46e5; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Direcci\u00f3n de Entrega</h3>
+                                <div style="background: #f8fafc; border-radius: 10px; padding: 16px; margin-bottom: 25px;">
+                                    <p style="margin: 0 0 6px; color: #334155; font-size: 14px;">
+                                        %s
+                                    </p>
+                                    %s
+                                </div>
+
+                                <!-- PAYMENT -->
+                                <h3 style="color: #4f46e5; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Pago</h3>
+                                <div style="background: #f0fdfa; border: 1px solid #2dd4bf; border-radius: 10px; padding: 14px 18px; margin-bottom: 25px;">
+                                    <table width="100%%" cellpadding="3" cellspacing="0">
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px; width: 120px;">M\u00e9todo:</td>
+                                            <td style="font-weight: 600; color: #0f766e; font-size: 14px;">%s</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">Total:</td>
+                                            <td style="font-weight: 700; color: #0f172a; font-size: 16px;">$%.2f</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <!-- PRODUCTS -->
+                                <h3 style="color: #4f46e5; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Productos</h3>
+                                <table width="100%%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                                    <thead>
+                                        <tr style="background: #f1f5f9;">
+                                            <th style="padding: 10px 8px; text-align: left; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Producto</th>
+                                            <th style="padding: 10px 8px; text-align: center; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Cant.</th>
+                                            <th style="padding: 10px 8px; text-align: right; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        %s
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="2" style="padding: 14px 8px; text-align: right; font-size: 15px; font-weight: 700; color: #0f172a; border-top: 2px solid #4f46e5;">TOTAL</td>
+                                            <td style="padding: 14px 8px; text-align: right; font-size: 17px; font-weight: 800; color: #0f172a; border-top: 2px solid #4f46e5;">$%.2f</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                                <!-- ACTIONS -->
+                                <div style="text-align: center; margin: 30px 0 10px;">
+                                    <a href="https://tmcreattion.netlify.app/src/pages/admin/pedidos/pedidos.html" style="display: inline-block; background: #4f46e5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 14px;">
+                                        Gestionar Pedido en el Panel
+                                    </a>
+                                </div>
+
+                            </td>
+                        </tr>
+
+                        <!-- FOOTER -->
+                        <tr>
+                            <td style="background: #0f172a; padding: 20px 30px; text-align: center; border-radius: 0 0 16px 16px;">
+                                <p style="margin: 0; color: #64748b; font-size: 12px;">TM Creation \u00a9 2026 \u2013 Panel de Administraci\u00f3n</p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td></tr>
+                </table>
+            </body>
+            </html>
+            """.formatted(
+                pedido.getId(),
+                fechaFormateada,
+                pedido.getEstado().toString(),
+                nombre,
+                telefono.replaceAll("[^0-9]", ""), telefono,
+                emailFormulario, emailFormulario,
+                pedido.getTelefonoContacto() != null ? pedido.getTelefonoContacto() : "No especificado",
+                pedido.getDireccionEntrega() != null ? pedido.getDireccionEntrega() : "No especificada",
+                mapsLink != null
+                    ? "<a href=\"" + mapsLink + "\" style=\"color: #2563eb; font-size: 13px; text-decoration: none;\">Ver en Google Maps</a>"
+                    : "",
+                metodoPagoFormateado,
+                pedido.getTotal(),
+                filas.toString(),
+                pedido.getTotal()
+        );
+    }
+
+    // ============================================================
+    // EMAIL RESENA
+    // ============================================================
     private String generarHtmlNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
         String estrellasHtml = "\u2605".repeat(estrellas) + "\u2606".repeat(5 - estrellas);
 
         return """
-            <div style="font-family: sans-serif; padding: 20px; background-color: #f3f4f6;">
-                <div style="background: white; padding: 25px; border-radius: 12px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0;">
-                    <h2 style="color: #f59e0b; border-bottom: 3px solid #f59e0b; padding-bottom: 10px; margin-top: 0;">Nueva Rese\u00f1a Recibida</h2>
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"></head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: 'Segoe UI', Arial, sans-serif;">
+                <table align="center" width="100%%" cellpadding="0" cellspacing="0">
+                <tr><td align="center" style="padding: 30px 15px;">
+                    <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%%;">
 
-                    <div style="background-color: #fffbeb; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-                        <p style="margin: 5px 0;"><b>Usuario:</b> %s</p>
-                        <p style="margin: 5px 0;"><b>Producto:</b> %s</p>
-                        <p style="margin: 5px 0;"><b>Calificaci\u00f3n:</b> <span style="color: #f59e0b; font-size: 18px;">%s</span></p>
-                    </div>
+                        <!-- HEADER -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                <h1 style="margin: 0; color: #78350f; font-size: 24px;">Nueva Rese\u00f1a Recibida</h1>
+                                <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">%s %s %s</p>
+                            </td>
+                        </tr>
 
-                    <h3 style="color: #1e293b; font-size: 16px;">Comentario:</h3>
-                    <p style="background-color: #f8fafc; padding: 15px; border-radius: 8px; color: #4b5563; font-style: italic;">
-                        %s
-                    </p>
+                        <!-- BODY -->
+                        <tr>
+                            <td style="background: #ffffff; padding: 30px;">
 
-                    <div style="margin-top: 25px; text-align: center;">
-                        <a href="https://tmcreattion.netlify.app/src/pages/admin/reviews/reviews.html" style="background-color: #2dd4bf; color: #0f172a; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ver Todas las Rese\u00f1as</a>
-                    </div>
-                </div>
-            </div>
-            """.formatted(nombreUsuario, nombreProducto, estrellasHtml, comentario != null && !comentario.isEmpty() ? comentario : "Sin comentario");
-    }
+                                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
+                                    <table width="100%%" cellpadding="4" cellspacing="0">
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px; width: 100px;">Usuario:</td>
+                                            <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">Producto:</td>
+                                            <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px;">Puntuaci\u00f3n:</td>
+                                            <td style="color: #f59e0b; font-size: 20px;">%s</td>
+                                        </tr>
+                                    </table>
+                                </div>
 
-    private String generarHtmlClienteProfesional(Pedido pedido, String nombre) {
-        return """
-            <div style="font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; max-width: 650px; margin: auto; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                <div style="background: linear-gradient(135deg, #0f172a, #1e293b); padding: 30px; text-align: center; color: white;">
-                    <h1 style="margin: 0; font-size: 26px; letter-spacing: 1px;">TM CREATION</h1>
-                    <p style="margin-top: 10px; opacity: 0.9;">Gracias por tu compra, %s!</p>
-                </div>
+                                %s
 
-                <div style="padding: 30px; line-height: 1.6;">
-                    <h2 style="color: #0f766e; border-bottom: 2px solid #2dd4bf; padding-bottom: 10px; font-size: 20px;">Confirmaci\u00f3n de Pedido #%d</h2>
-                    <p>Tu pedido ha sido recibido correctamente y se encuentra en estado <b>PENDIENTE</b> de validaci\u00f3n de pago.</p>
+                                <div style="text-align: center; margin: 30px 0 10px;">
+                                    <a href="https://tmcreattion.netlify.app/src/pages/admin/reviews/reviews.html" style="display: inline-block; background: #2dd4bf; color: #0f172a; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 14px;">
+                                        Ver Todas las Rese\u00f1as
+                                    </a>
+                                </div>
 
-                    <div style="background-color: #f0fdfa; border-left: 4px solid #2dd4bf; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-                        <h3 style="margin-top: 0; color: #134e4a; font-size: 16px;">Informaci\u00f3n para Transferencia</h3>
-                        <p style="margin-bottom: 8px;">Realiza el pago para comenzar con la producci\u00f3n:</p>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            <li><b>Titular:</b> %s</li>
-                            <li><b>CVU:</b> <code style="background: #e2e8f0; padding: 2px 5px; border-radius: 4px;">%s</code></li>
-                            <li><b>Alias:</b> <i>%s</i></li>
-                        </ul>
-                        <p style="margin-top: 15px; font-weight: bold;">
-                            Env\u00eda el comprobante por WhatsApp:
-                            <a href="%s" style="color: #25d366; text-decoration: none; font-size: 16px;">Click aqu\u00ed para enviar comprobante</a>
-                        </p>
-                    </div>
+                            </td>
+                        </tr>
 
-                    <h3 style="color: #111827; font-size: 17px; margin-top: 25px;">Proceso de confirmaci\u00f3n y env\u00edo</h3>
-                    <ul style="padding-left: 20px; color: #4b5563;">
-                        <li>Al recibir tu comprobante verificaremos el pago.</li>
-                        <li>Te solicitaremos confirmaci\u00f3n detallada de tu direcci\u00f3n de entrega.</li>
-                        <li>Una vez validado todo, coordinaremos el m\u00e9todo y tiempos de env\u00edo.</li>
-                        <li>Recibir\u00e1s confirmaci\u00f3n final con detalles log\u00edsticos.</li>
-                    </ul>
+                        <!-- FOOTER -->
+                        <tr>
+                            <td style="background: #0f172a; padding: 20px 30px; text-align: center; border-radius: 0 0 16px 16px;">
+                                <p style="margin: 0; color: #64748b; font-size: 12px;">TM Creation \u00a9 2026</p>
+                            </td>
+                        </tr>
 
-                    <h3 style="color: #111827; font-size: 17px; margin-top: 25px;">Pol\u00edtica de env\u00edos</h3>
-                    <ul style="padding-left: 20px; color: #4b5563;">
-                        <li><b>Env\u00edos en Mendoza (Gran Mendoza):</b> Tarifa fija de $3.500.</li>
-                        <li><b>Zonas fuera del radio habitual:</b> Podremos coordinar un punto intermedio.</li>
-                        <li><b>Resto del pa\u00eds/mundo:</b> Costo acordado seg\u00fan destino y log\u00edstica.</li>
-                    </ul>
-
-                    <h3 style="color: #111827; font-size: 17px; margin-top: 25px;">Garant\u00eda</h3>
-                    <p style="color: #4b5563; font-size: 14px;">
-                        Garant\u00eda de <b>30 d\u00edas</b> por fallas de fabricaci\u00f3n. No cubre da\u00f1os por mal uso, golpes o manipulaci\u00f3n indebida posterior a la entrega.
-                    </p>
-
-                    <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #eee;">
-                        <p style="font-size: 14px; color: #6b7280; margin-bottom: 15px;">Tienes alguna duda adicional?</p>
-                        <a href="%s" style="background-color: #2dd4bf; color: white; padding: 12px 25px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block;">Consultar por WhatsApp</a>
-                    </div>
-                </div>
-                <div style="background-color: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af;">
-                    TM Creation 2026 – Todos los derechos reservados
-                </div>
-            </div>
-            """.formatted(nombre, pedido.getId(), titular, cvu, alias, WHATSAPP_LINK, WHATSAPP_LINK);
-    }
-
-    private String generarHtmlAdminProfesional(Pedido pedido, String nombre, String telefono, String emailFormulario) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-        StringBuilder filas = new StringBuilder();
-
-        for (DetallePedido det : pedido.getDetalles()) {
-            filas.append("""
-                <tr>
-                    <td style="padding:10px; border-bottom: 1px solid #eee;">%s</td>
-                    <td style="padding:10px; border-bottom: 1px solid #eee; text-align:center;">%d</td>
-                    <td style="padding:10px; border-bottom: 1px solid #eee; text-align:right;">$%.2f</td>
-                </tr>
-                """.formatted(det.getProducto().getNombre(), det.getCantidad(), det.getSubtotal()));
-        }
-
-        return """
-            <div style="font-family: sans-serif; padding: 20px; background-color: #f3f4f6;">
-                <div style="background: white; padding: 25px; border-radius: 12px; max-width: 600px; margin: auto; border: 1px solid #e2e8f0;">
-                    <h2 style="color: #1e293b; border-bottom: 3px solid #6366f1; padding-bottom: 10px; margin-top: 0;">Nuevo Pedido #%d</h2>
-                    <p style="color: #64748b;"><b>Fecha:</b> %s</p>
-
-                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                        <h3 style="color: #4f46e5; font-size: 16px; margin-top: 0;">Datos del Cliente (Formulario)</h3>
-                        <p style="margin: 5px 0;"><b>Nombre:</b> %s</p>
-                        <p style="margin: 5px 0;"><b>WhatsApp:</b> <a href="https://wa.me/%s" style="color: #10b981; text-decoration: none; font-weight: bold;">%s (Chat)</a></p>
-                        <p style="margin: 5px 0;"><b>Email Contacto:</b> <a href="mailto:%s" style="color: #6366f1;">%s</a></p>
-                        <p style="margin: 5px 0;"><b>Direcci\u00f3n:</b> %s</p>
-                    </div>
-
-                    <h3 style="color: #1e293b; font-size: 16px;">Detalle de Productos</h3>
-                    <table style="width: 100%%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="text-align: left; font-size: 12px; color: #9ca3af; text-transform: uppercase;">
-                                <th style="padding: 10px;">Producto</th>
-                                <th style="padding: 10px; text-align:center;">Cant.</th>
-                                <th style="padding: 10px; text-align:right;">Subtotal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            %s
-                        </tbody>
                     </table>
-
-                    <div style="text-align: right; margin-top: 20px; padding-top: 15px; border-top: 2px solid #f1f5f9;">
-                        <span style="font-size: 18px; color: #1e293b; font-weight: bold;">TOTAL: $%.2f</span>
-                    </div>
-                </div>
-            </div>
+                </td></tr>
+                </table>
+            </body>
+            </html>
             """.formatted(
-                pedido.getId(),
-                pedido.getFecha().format(formatter),
-                nombre,
-                telefono.replaceAll("[^0-9]", ""), telefono,
-                emailFormulario, emailFormulario,
-                pedido.getDireccionEntrega(),
-                filas.toString(),
-                pedido.getTotal()
+                nombreUsuario, "rese\u00f1\u00f3", nombreProducto,
+                nombreUsuario,
+                nombreProducto,
+                estrellasHtml,
+                comentario != null && !comentario.isEmpty()
+                    ? """
+                    <h3 style="color: #1e293b; font-size: 15px; margin: 0 0 10px;">Comentario</h3>
+                    <div style="background: #f8fafc; border-left: 4px solid #f59e0b; border-radius: 8px; padding: 16px; margin-bottom: 10px;">
+                        <p style="margin: 0; color: #475569; font-style: italic; line-height: 1.6;">%s</p>
+                    </div>
+                    """.formatted(comentario)
+                    : ""
         );
     }
 }
