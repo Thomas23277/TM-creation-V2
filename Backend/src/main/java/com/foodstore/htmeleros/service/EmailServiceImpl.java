@@ -2,6 +2,7 @@ package com.foodstore.htmeleros.service;
 
 import com.foodstore.htmeleros.entity.DetallePedido;
 import com.foodstore.htmeleros.entity.Pedido;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,15 @@ public class EmailServiceImpl implements EmailService {
 
     @Value("${app.pagos.titular:}")
     private String titular;
+
+    @PostConstruct
+    public void init() {
+        log.info("📧 EmailService iniciado");
+        log.info("📧 From: {}", emailFrom);
+        log.info("📧 Admin: {}", adminEmail);
+        log.info("📧 Host: smtp.resend.com (desde application.properties)");
+        log.info("📧 RESEND_API_KEY presente: {}", System.getenv("RESEND_API_KEY") != null && !System.getenv("RESEND_API_KEY").isEmpty());
+    }
 
     // Enlace directo de WhatsApp
     private static final String WHATSAPP_LINK = "https://wa.me/5492616524913";

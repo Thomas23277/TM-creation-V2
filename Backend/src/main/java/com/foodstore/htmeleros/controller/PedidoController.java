@@ -8,9 +8,13 @@ import com.foodstore.htmeleros.dto.PedidoDTO;
 import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.service.PedidoService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,8 +22,35 @@ import org.springframework.web.bind.annotation.*;
 @CrossOrigin(origins = "*") // Simplificado para pruebas, luego puedes volver a poner tu lista
 public class PedidoController {
 
+    private static final Logger log = LoggerFactory.getLogger(PedidoController.class);
+
     @Autowired
     private PedidoService pedidoService;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    // ============================================================
+    //                   TEST EMAIL (diagnóstico SMTP)
+    // ============================================================
+    @GetMapping("/test-email")
+    public ResponseEntity<?> testEmail() {
+        log.info("🧪 TEST EMAIL ENDPOINT INVOCADO");
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setFrom("tmcreation233@gmail.com");
+            msg.setTo("tmcreation233@gmail.com");
+            msg.setSubject("🧪 Test SMTP - TM Creation");
+            msg.setText("Si recibís esto, el SMTP de Resend funciona correctamente.");
+            mailSender.send(msg);
+            log.info("✅ TEST EMAIL ENVIADO EXITOSAMENTE");
+            return ResponseEntity.ok(Map.of("message", "✅ Email de prueba enviado a tmcreation233@gmail.com"));
+        } catch (Exception e) {
+            log.error("❌ Test email falló: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", e.getMessage()));
+        }
+    }
 
     // ============================================================
     //                   CREAR PEDIDO
