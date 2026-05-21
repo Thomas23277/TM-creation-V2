@@ -81,8 +81,19 @@ public class ResenaController {
         resena.setComentario(comentario);
 
         Resena saved = resenaService.guardar(resena, productoId, usuarioId);
-        
-        emailService.enviarNotificacionNuevaResena(usuarioDTO.getNombre(), productoDTO.getNombre(), estrellas, comentario);
+
+        String fechaFormateada = saved.getFecha() != null
+                ? saved.getFecha().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+                : "";
+
+        emailService.enviarNotificacionNuevaResena(
+                usuarioDTO.getNombre(),
+                usuarioDTO.getEmail(),
+                productoDTO.getNombre(),
+                estrellas,
+                comentario,
+                fechaFormateada
+        );
         
         return ResponseEntity.ok(saved);
     }

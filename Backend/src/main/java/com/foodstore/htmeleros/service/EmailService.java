@@ -8,7 +8,7 @@ public interface EmailService {
 
     void enviarNotificacionAdmin(Pedido pedido, String nombreFormulario, String telefonoFormulario, String emailFormulario);
 
-    void enviarNotificacionNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario);
+    void enviarNotificacionNuevaResena(String nombreUsuario, String emailUsuario, String nombreProducto, int estrellas, String comentario, String fecha);
 
     void enviarEmailPrueba();
 }

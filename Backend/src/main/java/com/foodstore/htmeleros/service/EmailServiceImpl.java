@@ -126,10 +126,10 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public void enviarNotificacionNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
+    public void enviarNotificacionNuevaResena(String nombreUsuario, String emailUsuario, String nombreProducto, int estrellas, String comentario, String fecha) {
         sendEmail(adminEmail,
                 "Nueva Rese\u00f1a - " + nombreProducto + " - " + nombreUsuario,
-                generarHtmlNuevaResena(nombreUsuario, nombreProducto, estrellas, comentario));
+                generarHtmlNuevaResena(nombreUsuario, emailUsuario, nombreProducto, estrellas, comentario, fecha));
     }
 
     private String generarGoogleMapsLink(String direccion) {
@@ -545,9 +545,9 @@ public class EmailServiceImpl implements EmailService {
     }
 
     // ============================================================
-    // EMAIL RESENA
+    // EMAIL RESENA - ENRIQUECIDO
     // ============================================================
-    private String generarHtmlNuevaResena(String nombreUsuario, String nombreProducto, int estrellas, String comentario) {
+    private String generarHtmlNuevaResena(String nombreUsuario, String emailUsuario, String nombreProducto, int estrellas, String comentario, String fecha) {
         String estrellasHtml = "\u2605".repeat(estrellas) + "\u2606".repeat(5 - estrellas);
 
         return """
@@ -562,7 +562,8 @@ public class EmailServiceImpl implements EmailService {
                         <!-- HEADER -->
                         <tr>
                             <td style="background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
-                                <h1 style="margin: 0; color: #78350f; font-size: 24px;">Nueva Rese\u00f1a Recibida</h1>
+                                <div style="font-size: 48px; margin-bottom: 10px;">\u2B50</div>
+                                <h1 style="margin: 0; color: #78350f; font-size: 26px; letter-spacing: 1px;">Nueva Rese\u00f1a Recibida</h1>
                                 <p style="margin: 8px 0 0; color: #92400e; font-size: 14px;">%s %s %s</p>
                             </td>
                         </tr>
@@ -571,28 +572,38 @@ public class EmailServiceImpl implements EmailService {
                         <tr>
                             <td style="background: #ffffff; padding: 30px;">
 
-                                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 20px; margin-bottom: 25px;">
-                                    <table width="100%%" cellpadding="4" cellspacing="0">
+                                <!-- REVIEW DETAILS -->
+                                <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                                    <table width="100%%" cellpadding="5" cellspacing="0">
                                         <tr>
-                                            <td style="color: #64748b; font-size: 13px; width: 100px;">Usuario:</td>
+                                            <td style="color: #64748b; font-size: 13px; width: 120px; vertical-align: top;">Usuario:</td>
                                             <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
                                         </tr>
                                         <tr>
-                                            <td style="color: #64748b; font-size: 13px;">Producto:</td>
+                                            <td style="color: #64748b; font-size: 13px; vertical-align: top;">Email:</td>
+                                            <td style="color: #2563eb; font-size: 14px;"><a href="mailto:%s" style="color: #2563eb; text-decoration: none;">%s</a></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px; vertical-align: top;">Producto:</td>
                                             <td style="font-weight: 600; color: #0f172a; font-size: 14px;">%s</td>
                                         </tr>
                                         <tr>
-                                            <td style="color: #64748b; font-size: 13px;">Puntuaci\u00f3n:</td>
-                                            <td style="color: #f59e0b; font-size: 20px;">%s</td>
+                                            <td style="color: #64748b; font-size: 13px; vertical-align: top;">Puntuaci\u00f3n:</td>
+                                            <td style="color: #f59e0b; font-size: 22px; letter-spacing: 2px;">%s</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="color: #64748b; font-size: 13px; vertical-align: top;">Fecha:</td>
+                                            <td style="font-weight: 500; color: #475569; font-size: 14px;">%s</td>
                                         </tr>
                                     </table>
                                 </div>
 
                                 %s
 
+                                <!-- LINK TO ADMIN -->
                                 <div style="text-align: center; margin: 30px 0 10px;">
-                                    <a href="https://tmcreattion.netlify.app/src/pages/admin/reviews/reviews.html" style="display: inline-block; background: #2dd4bf; color: #0f172a; padding: 14px 28px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 14px;">
-                                        Ver Todas las Rese\u00f1as
+                                    <a href="https://tmcreattion.netlify.app/src/pages/admin/reviews/reviews.html" style="display: inline-block; background: #2dd4bf; color: #0f172a; padding: 14px 32px; text-decoration: none; border-radius: 30px; font-weight: 700; font-size: 14px;">
+                                        Gestionar Rese\u00f1as
                                     </a>
                                 </div>
 
@@ -602,7 +613,7 @@ public class EmailServiceImpl implements EmailService {
                         <!-- FOOTER -->
                         <tr>
                             <td style="background: #0f172a; padding: 20px 30px; text-align: center; border-radius: 0 0 16px 16px;">
-                                <p style="margin: 0; color: #64748b; font-size: 12px;">TM Creation \u00a9 2026</p>
+                                <p style="margin: 0; color: #64748b; font-size: 12px;">TM Creation \u00a9 2026 \u2013 Panel de Administraci\u00f3n</p>
                             </td>
                         </tr>
 
@@ -612,10 +623,12 @@ public class EmailServiceImpl implements EmailService {
             </body>
             </html>
             """.formatted(
-                nombreUsuario, "rese\u00f1\u00f3", nombreProducto,
+                nombreUsuario, "dej\u00f3 una rese\u00f1a en", nombreProducto,
                 nombreUsuario,
+                emailUsuario, emailUsuario,
                 nombreProducto,
                 estrellasHtml,
+                fecha != null && !fecha.isEmpty() ? fecha : "Sin fecha",
                 comentario != null && !comentario.isEmpty()
                     ? """
                     <h3 style="color: #1e293b; font-size: 15px; margin: 0 0 10px;">Comentario</h3>
@@ -623,7 +636,7 @@ public class EmailServiceImpl implements EmailService {
                         <p style="margin: 0; color: #475569; font-style: italic; line-height: 1.6;">%s</p>
                     </div>
                     """.formatted(comentario)
-                    : ""
+                    : "<p style=\"color: #64748b; font-size: 14px; text-align: center;\">Sin comentario escrito.</p>"
         );
     }
 }
