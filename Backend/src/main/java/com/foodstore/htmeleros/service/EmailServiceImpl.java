@@ -20,8 +20,11 @@ public class EmailServiceImpl implements EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
+    @Value("${app.email.from}")
     private String emailFrom;
+
+    @Value("${app.admin.email}")
+    private String adminEmail;
 
     @Value("${app.pagos.cvu:}")
     private String cvu;
@@ -60,7 +63,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
             helper.setFrom(emailFrom);
-            helper.setTo(emailFrom);
+            helper.setTo(adminEmail);
             helper.setSubject("📦 NUEVO PEDIDO #" + pedido.getId() + " - " + nombreFormulario);
 
             helper.setText(generarHtmlAdminProfesional(pedido, nombreFormulario, telefonoFormulario, emailFormulario), true);
@@ -78,7 +81,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, true, "UTF-8");
 
             helper.setFrom(emailFrom);
-            helper.setTo(emailFrom);
+            helper.setTo(adminEmail);
             helper.setSubject("⭐ NUEVA RESEÑA - " + nombreProducto + " - " + nombreUsuario);
 
             helper.setText(generarHtmlNuevaResena(nombreUsuario, nombreProducto, estrellas, comentario), true);
