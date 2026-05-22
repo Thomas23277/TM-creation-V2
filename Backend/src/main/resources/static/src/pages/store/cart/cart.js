@@ -1,6 +1,6 @@
 "use strict";
 document.addEventListener("DOMContentLoaded", () => {
-    const API_URL = "http://localhost:8080";
+    const API_URL = "";
     // =======================
     // CARRITO Y USUARIO
     // =======================

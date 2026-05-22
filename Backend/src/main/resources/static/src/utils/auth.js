@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8080";
+/* vacío = mismo origen (Vite proxy en dev, mismo server en prod) */
+const API_URL = "";
 /* ============================================================
 🧩 Función auxiliar: parsear error
 ============================================================ */

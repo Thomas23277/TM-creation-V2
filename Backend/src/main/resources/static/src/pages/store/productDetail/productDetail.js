@@ -30,9 +30,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         if ((_a = product.urlImagen) === null || _a === void 0 ? void 0 : _a.startsWith("http"))
             return product.urlImagen;
         if ((_b = product.urlImagen) === null || _b === void 0 ? void 0 : _b.startsWith("/uploads/"))
-            return `http://localhost:8080${product.urlImagen}`;
+            return `${product.urlImagen}`;
         if (product.urlImagen)
-            return `http://localhost:8080/uploads/${product.urlImagen}`;
+            return `/uploads/${product.urlImagen}`;
         return imagenesProductos[product.nombre] || "/src/assets/food/default.jpeg";
     }
     /* ========= ELEMENTOS ========= */
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     /* ========= CARGAR PRODUCTO ========= */
     try {
-        const r = await fetch(`http://localhost:8080/api/productos/${id}`);
+        const r = await fetch(`/api/productos/${id}`);
         if (!r.ok)
             throw new Error("no product");
         const product = await r.json();

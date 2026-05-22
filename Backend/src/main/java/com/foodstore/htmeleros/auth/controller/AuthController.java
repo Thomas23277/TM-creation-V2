@@ -76,22 +76,26 @@ public class AuthController {
 
             if (usuarioOptional.isEmpty()) {
                 return ResponseEntity.status(401).body(
-                        Map.of("message", "Credenciales inválidas")
+                        Map.of("message", "Credenciales inválidas", "code", "USER_NOT_FOUND")
                 );
             }
 
             Usuario usuario = usuarioOptional.get();
 
-            String hash = Sha256Util.hash(password);
-            boolean passwordOk = hash.equals(usuario.getContrasenia());
+            String storedHash = usuario.getContrasenia();
+            boolean esBcrypt = storedHash != null && storedHash.startsWith("$2");
+            boolean passwordOk;
 
-            if (!passwordOk && usuario.getContrasenia().startsWith("$2")) {
-                passwordOk = new BCryptPasswordEncoder().matches(password, usuario.getContrasenia());
+            if (esBcrypt) {
+                passwordOk = new BCryptPasswordEncoder().matches(password, storedHash);
+            } else {
+                String hash = Sha256Util.hash(password);
+                passwordOk = hash.equals(storedHash);
             }
 
             if (!passwordOk) {
                 return ResponseEntity.status(401).body(
-                        Map.of("message", "Credenciales inválidas")
+                        Map.of("message", "Credenciales inválidas", "code", "WRONG_PASSWORD")
                 );
             }
 
@@ -121,8 +125,10 @@ public class AuthController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.status(401).body(
-                    Map.of("message", "Credenciales inválidas")
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(
+                    Map.of("message", "Error interno del servidor", "code", "INTERNAL_ERROR",
+                            "error", e.getMessage())
             );
         }
     }

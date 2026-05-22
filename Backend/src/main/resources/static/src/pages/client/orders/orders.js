@@ -27,7 +27,7 @@ const imagenesProductos = {
         API FETCH
 ============================ */
 async function apiFetch(path, opts = {}) {
-    const API_BASE = "http://localhost:8080";
+    const API_BASE = "";
     const res = await fetch(`${API_BASE}${path}`, opts);
     if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${await res.text()}`);
