@@ -4,25 +4,25 @@ import com.foodstore.htmeleros.auth.dto.LoginRequest;
 import com.foodstore.htmeleros.auth.dto.RegisterRequest;
 import com.foodstore.htmeleros.auth.dto.UserResponse;
 import com.foodstore.htmeleros.auth.service.AuthService;
+import com.foodstore.htmeleros.auth.util.Sha256Util;
 import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
-import com.foodstore.htmeleros.security.CustomUserDetails;
-import com.foodstore.htmeleros.security.CustomUserDetailsService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -32,17 +32,11 @@ public class AuthController {
 
     private final AuthService authService;
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final CustomUserDetailsService userDetailsService;
 
     public AuthController(AuthService authService,
-                          UsuarioRepository usuarioRepository,
-                          PasswordEncoder passwordEncoder,
-                          CustomUserDetailsService userDetailsService) {
+                          UsuarioRepository usuarioRepository) {
         this.authService = authService;
         this.usuarioRepository = usuarioRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.userDetailsService = userDetailsService;
     }
 
     // ==========================
@@ -68,7 +62,7 @@ public class AuthController {
     }
 
     // ==========================
-    // 🔐 LOGIN (PasswordEncoder directo)
+    // 🔐 LOGIN (ULTRA SIMPLE)
     // ==========================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request,
@@ -76,18 +70,36 @@ public class AuthController {
 
         try {
             String email = request.getEmail().trim().toLowerCase();
+            String password = request.getContrasenia();
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            Optional<Usuario> usuarioOptional = usuarioRepository.findByEmail(email);
 
-            if (!passwordEncoder.matches(request.getContrasenia(), userDetails.getPassword())) {
+            if (usuarioOptional.isEmpty()) {
                 return ResponseEntity.status(401).body(
                         Map.of("message", "Credenciales inválidas")
                 );
             }
 
+            Usuario usuario = usuarioOptional.get();
+
+            String hash = Sha256Util.hash(password);
+            boolean passwordOk = hash.equals(usuario.getContrasenia());
+
+            if (!passwordOk && usuario.getContrasenia().startsWith("$2")) {
+                passwordOk = new BCryptPasswordEncoder().matches(password, usuario.getContrasenia());
+            }
+
+            if (!passwordOk) {
+                return ResponseEntity.status(401).body(
+                        Map.of("message", "Credenciales inválidas")
+                );
+            }
+
+            String role = "ROLE_" + usuario.getRol().name();
+
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
+                            email, null, List.of(new SimpleGrantedAuthority(role))
                     );
 
             SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -99,17 +111,6 @@ public class AuthController {
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     context
             );
-
-            Optional<Usuario> usuarioOptional =
-                    usuarioRepository.findByEmail(email);
-
-            if (usuarioOptional.isEmpty()) {
-                return ResponseEntity.status(401).body(
-                        Map.of("message", "Usuario no encontrado")
-                );
-            }
-
-            Usuario usuario = usuarioOptional.get();
 
             return ResponseEntity.ok(Map.of(
                     "id", usuario.getId(),
