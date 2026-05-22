@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
@@ -116,13 +117,14 @@ public class AuthController {
                     context
             );
 
-            return ResponseEntity.ok(Map.of(
-                    "id", usuario.getId(),
-                    "email", usuario.getEmail(),
-                    "nombre", usuario.getNombre(),
-                    "rol", usuario.getRol().name(),
-                    "fotoPerfil", usuario.getFotoPerfil()
-            ));
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", usuario.getId());
+            response.put("email", usuario.getEmail());
+            response.put("nombre", usuario.getNombre());
+            response.put("rol", usuario.getRol().name());
+            response.put("fotoPerfil", usuario.getFotoPerfil());
+
+            return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             System.out.println("===== LOGIN ERROR =====");
@@ -175,14 +177,15 @@ public class AuthController {
 
         Usuario usuario = usuarioOptional.get();
 
-        return ResponseEntity.ok(Map.of(
-                "authenticated", true,
-                "id", usuario.getId(),
-                "email", usuario.getEmail(),
-                "nombre", usuario.getNombre(),
-                "rol", usuario.getRol().name(),
-                "fotoPerfil", usuario.getFotoPerfil()
-        ));
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("authenticated", true);
+        userData.put("id", usuario.getId());
+        userData.put("email", usuario.getEmail());
+        userData.put("nombre", usuario.getNombre());
+        userData.put("rol", usuario.getRol().name());
+        userData.put("fotoPerfil", usuario.getFotoPerfil());
+
+        return ResponseEntity.ok(userData);
     }
 
     // ==========================
