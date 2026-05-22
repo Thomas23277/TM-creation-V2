@@ -125,10 +125,15 @@ public class AuthController {
             ));
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("===== LOGIN ERROR =====");
+            System.out.println(e.getClass().getName() + ": " + e.getMessage());
+            for (StackTraceElement el : e.getStackTrace()) {
+                if (el.getClassName().contains("foodstore")) {
+                    System.out.println("  at " + el);
+                }
+            }
             return ResponseEntity.status(500).body(
-                    Map.of("message", "Error interno del servidor", "code", "INTERNAL_ERROR",
-                            "error", e.getMessage())
+                    Map.of("message", "Error interno del servidor", "code", "INTERNAL_ERROR")
             );
         }
     }
