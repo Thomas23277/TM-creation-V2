@@ -62,12 +62,14 @@ public class SecurityConfig {
         config.setAllowCredentials(true);
 
         // Frontend Vite + Producción (Netlify)
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://tmcreattion.netlify.app",
-                "https://tmcreation.netlify.app",
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:*",
+                "http://192.168.100.*:*",
+                "http://192.168.*.*:*",
+                "http://10.*.*.*:*",
+                "https://*.netlify.app",
                 "https://tm-creation-v2.onrender.com",
-                "https://long-credit-df4e.tmcreation233.workers.dev"
+                "https://*.workers.dev"
         ));
 
         config.setAllowedMethods(
