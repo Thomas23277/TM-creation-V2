@@ -9,26 +9,25 @@ import com.foodstore.htmeleros.security.CustomUserDetails;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
-    private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
+    private final UserDetailsService userDetailsService;
 
     public AuthService(UsuarioRepository usuarioRepository,
-                       AuthenticationManager authenticationManager,
-                       PasswordEncoder passwordEncoder) {
+                       PasswordEncoder passwordEncoder,
+                       UserDetailsService userDetailsService) {
         this.usuarioRepository = usuarioRepository;
-        this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
     }
 
     // ===============================
@@ -79,17 +78,23 @@ public class AuthService {
 
             String emailNormalizado = email.trim().toLowerCase();
 
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(emailNormalizado, password)
-            );
+            UserDetails userDetails = userDetailsService.loadUserByUsername(emailNormalizado);
 
-            // 🔥 Esto es CLAVE para que Spring cree la sesión
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+                throw new IllegalArgumentException("Credenciales inválidas");
+            }
 
-            CustomUserDetails userDetails =
-                    (CustomUserDetails) authentication.getPrincipal();
+            UsernamePasswordAuthenticationToken auth =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
 
-            Usuario usuario = userDetails.getUsuario();
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+            CustomUserDetails customUserDetails =
+                    (CustomUserDetails) userDetails;
+
+            Usuario usuario = customUserDetails.getUsuario();
 
             return new UserResponse(
                     usuario.getId(),
@@ -100,7 +105,9 @@ public class AuthService {
                     usuario.getFotoPerfil()
             );
 
-        } catch (BadCredentialsException ex) {
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
             throw new IllegalArgumentException("Credenciales inválidas");
         }
     }

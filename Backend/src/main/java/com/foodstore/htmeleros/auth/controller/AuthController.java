@@ -6,16 +6,18 @@ import com.foodstore.htmeleros.auth.dto.UserResponse;
 import com.foodstore.htmeleros.auth.service.AuthService;
 import com.foodstore.htmeleros.entity.Usuario;
 import com.foodstore.htmeleros.repository.UsuarioRepository;
+import com.foodstore.htmeleros.security.CustomUserDetails;
+import com.foodstore.htmeleros.security.CustomUserDetailsService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -29,14 +31,17 @@ public class AuthController {
 
     private final AuthService authService;
     private final UsuarioRepository usuarioRepository;
-    private final AuthenticationManager authenticationManager;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomUserDetailsService userDetailsService;
 
     public AuthController(AuthService authService,
                           UsuarioRepository usuarioRepository,
-                          AuthenticationManager authenticationManager) {
+                          PasswordEncoder passwordEncoder,
+                          CustomUserDetailsService userDetailsService) {
         this.authService = authService;
         this.usuarioRepository = usuarioRepository;
-        this.authenticationManager = authenticationManager;
+        this.passwordEncoder = passwordEncoder;
+        this.userDetailsService = userDetailsService;
     }
 
     // ==========================
@@ -62,41 +67,40 @@ public class AuthController {
     }
 
     // ==========================
-    // 🔐 LOGIN CORREGIDO REAL
+    // 🔐 LOGIN (PasswordEncoder directo)
     // ==========================
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request,
                                    HttpServletRequest httpRequest) {
 
         try {
+            String email = request.getEmail().trim().toLowerCase();
 
-            Authentication authentication = authenticationManager.authenticate(
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            if (!passwordEncoder.matches(request.getContrasenia(), userDetails.getPassword())) {
+                return ResponseEntity.status(401).body(
+                        Map.of("message", "Credenciales inválidas")
+                );
+            }
+
+            UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail().trim().toLowerCase(),
-                            request.getContrasenia()
-                    )
-            );
+                            userDetails, null, userDetails.getAuthorities()
+                    );
 
-            // 🔥 Crear contexto limpio
             SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
-
-            // 🔥 Guardarlo en el holder
+            context.setAuthentication(auth);
             SecurityContextHolder.setContext(context);
 
-            // 🔥 Crear sesión
             HttpSession session = httpRequest.getSession(true);
-
-            // 🔥 GUARDAR CONTEXTO EN SESIÓN (ESTO ES LO QUE FALTABA)
             session.setAttribute(
                     HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
                     context
             );
 
             Optional<Usuario> usuarioOptional =
-                    usuarioRepository.findByEmail(
-                            request.getEmail().trim().toLowerCase()
-                    );
+                    usuarioRepository.findByEmail(email);
 
             if (usuarioOptional.isEmpty()) {
                 return ResponseEntity.status(401).body(
