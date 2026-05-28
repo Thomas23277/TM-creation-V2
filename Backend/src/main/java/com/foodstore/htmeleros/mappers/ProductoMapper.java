@@ -2,9 +2,11 @@ package com.foodstore.htmeleros.mappers;
 
 import java.util.Collections;
 import java.util.List;
+import com.foodstore.htmeleros.dto.EtiquetaDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.ProductoImagenDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
+import com.foodstore.htmeleros.entity.Etiqueta;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.Categoria;
 import com.foodstore.htmeleros.entity.ProductoImagen;
@@ -28,6 +30,8 @@ public class ProductoMapper {
 
         // 🔥 En la Entity el método sigue siendo isDisponible() (porque es boolean primitivo)
         dto.setDisponible(producto.isDisponible());
+        dto.setColoresActivo(producto.isColoresActivo());
+        dto.setStockControl(producto.isStockControl());
 
         String urlNormalizada = normalizarUrl(producto.getUrlImagen());
         dto.setUrlImagen(urlNormalizada);
@@ -39,7 +43,7 @@ public class ProductoMapper {
 
         if (producto.getVariantes() != null) {
             dto.setVariantes(producto.getVariantes().stream()
-                    .map(v -> new VarianteDTO(v.getId(), v.getNombre(), v.getPrecio()))
+                    .map(v -> new VarianteDTO(v.getId(), v.getNombre(), v.getPrecio(), v.getColorHex()))
                     .toList());
         }
 
@@ -47,6 +51,12 @@ public class ProductoMapper {
             dto.setImagenes(producto.getImagenes().stream()
                     .map(img -> new ProductoImagenDTO(img.getId(), normalizarUrl(img.getUrlImagen()), img.getOrden()))
                     .toList());
+        }
+
+        if (producto.getEtiquetas() != null) {
+            dto.setEtiquetas(producto.getEtiquetas().stream()
+                    .map(e -> new EtiquetaDTO(e.getId(), e.getNombre(), e.getColorHex(), e.isVisible(), e.isInterna()))
+                    .collect(java.util.stream.Collectors.toSet()));
         }
 
         return dto;

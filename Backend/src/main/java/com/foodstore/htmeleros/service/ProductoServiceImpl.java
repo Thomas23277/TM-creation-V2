@@ -1,11 +1,14 @@
 package com.foodstore.htmeleros.service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.entity.Categoria;
+import com.foodstore.htmeleros.entity.Etiqueta;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.ProductoImagen;
 import com.foodstore.htmeleros.entity.Variante;
@@ -13,6 +16,7 @@ import com.foodstore.htmeleros.exception.ResourceNotFoundException;
 import com.foodstore.htmeleros.mappers.ProductoMapper;
 import com.foodstore.htmeleros.repository.CategoriaRepository;
 import com.foodstore.htmeleros.repository.DetallePedidoRepository;
+import com.foodstore.htmeleros.repository.EtiquetaRepository;
 import com.foodstore.htmeleros.repository.ProductoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +29,14 @@ public class ProductoServiceImpl implements ProductoService {
     private final CategoriaRepository categoriaRepository;
     private final DetallePedidoRepository detallePedidoRepository;
     private final UploadService uploadService;
+    private final EtiquetaRepository etiquetaRepository;
 
-    public ProductoServiceImpl(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, DetallePedidoRepository detallePedidoRepository, UploadService uploadService) {
+    public ProductoServiceImpl(ProductoRepository productoRepository, CategoriaRepository categoriaRepository, DetallePedidoRepository detallePedidoRepository, UploadService uploadService, EtiquetaRepository etiquetaRepository) {
         this.productoRepository = productoRepository;
         this.categoriaRepository = categoriaRepository;
         this.detallePedidoRepository = detallePedidoRepository;
         this.uploadService = uploadService;
+        this.etiquetaRepository = etiquetaRepository;
     }
 
     @Override
@@ -50,6 +56,8 @@ public class ProductoServiceImpl implements ProductoService {
         producto.setStock(dto.getStock());
         producto.setDescripcion(dto.getDescripcion());
         producto.setDisponible(dto.getDisponible() != null ? dto.getDisponible() : true);
+        producto.setColoresActivo(dto.getColoresActivo() != null ? dto.getColoresActivo() : false);
+        producto.setStockControl(dto.getStockControl() != null ? dto.getStockControl() : true);
         producto.setCategoria(categoria);
 
         producto.setImagenes(new ArrayList<>());
@@ -72,9 +80,14 @@ public class ProductoServiceImpl implements ProductoService {
                 Variante v = new Variante();
                 v.setNombre(vDto.getNombre());
                 v.setPrecio(vDto.getPrecio());
+                v.setColorHex(vDto.getColorHex());
                 v.setProducto(producto);
                 producto.getVariantes().add(v);
             }
+        }
+
+        if (dto.getEtiquetaIds() != null && !dto.getEtiquetaIds().isEmpty()) {
+            producto.setEtiquetas(new HashSet<>(etiquetaRepository.findAllById(dto.getEtiquetaIds())));
         }
 
         Producto guardado = productoRepository.save(producto);
@@ -128,6 +141,14 @@ public class ProductoServiceImpl implements ProductoService {
             existente.setDisponible(dto.getDisponible());
         }
 
+        if (dto.getColoresActivo() != null) {
+            existente.setColoresActivo(dto.getColoresActivo());
+        }
+
+        if (dto.getStockControl() != null) {
+            existente.setStockControl(dto.getStockControl());
+        }
+
         existente.setCategoria(categoria);
 
         existente.getVariantes().clear();
@@ -136,8 +157,17 @@ public class ProductoServiceImpl implements ProductoService {
                 Variante v = new Variante();
                 v.setNombre(vDto.getNombre());
                 v.setPrecio(vDto.getPrecio());
+                v.setColorHex(vDto.getColorHex());
                 v.setProducto(existente);
                 existente.getVariantes().add(v);
+            }
+        }
+
+        if (dto.getEtiquetaIds() != null) {
+            if (dto.getEtiquetaIds().isEmpty()) {
+                existente.getEtiquetas().clear();
+            } else {
+                existente.setEtiquetas(new HashSet<>(etiquetaRepository.findAllById(dto.getEtiquetaIds())));
             }
         }
 
@@ -213,5 +243,46 @@ public class ProductoServiceImpl implements ProductoService {
         return productoRepository.findByCategoria(categoria).stream()
                 .map(ProductoMapper::toDTO)
                 .toList();
+    }
+
+    @Override
+    public List<ProductoDTO> search(String term) {
+        return productoRepository.search(term).stream()
+                .map(ProductoMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<ProductoDTO> findRecomendados() {
+        return productoRepository.findTop6ByDisponibleTrueOrderByIdDesc().stream()
+                .filter(p -> !p.getStockControl() || p.getStock() > 0)
+                .map(ProductoMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public List<ProductoDTO> findDestacados() {
+        List<Long> topIds = detallePedidoRepository.findTopProductoIdsByCantidadTotal();
+        List<Producto> result = new ArrayList<>();
+        if (topIds != null) {
+            for (Long id : topIds) {
+                if (result.size() >= 6) break;
+                productoRepository.findById(id).ifPresent(p -> {
+                    if (p.getDisponible() && (!p.getStockControl() || p.getStock() > 0)) {
+                        result.add(p);
+                    }
+                });
+            }
+        }
+        // Fill remaining with newest available if less than 6
+        if (result.size() < 6) {
+            List<Producto> fallback = productoRepository.findTop6ByDisponibleTrueOrderByIdDesc().stream()
+                    .filter(p -> !p.getStockControl() || p.getStock() > 0)
+                    .filter(p -> !result.contains(p))
+                    .limit(6 - result.size())
+                    .toList();
+            result.addAll(fallback);
+        }
+        return result.stream().map(ProductoMapper::toDTO).toList();
     }
 }

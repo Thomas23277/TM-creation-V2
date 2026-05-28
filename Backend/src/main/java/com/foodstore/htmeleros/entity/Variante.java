@@ -25,6 +25,9 @@ public class Variante {
     @Column(name = "precio", nullable = false)
     private double precio;
 
+    @Column(name = "color_hex", length = 7)
+    private String colorHex;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
     @JsonIgnore

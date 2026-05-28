@@ -19,6 +19,12 @@ public interface ProductoService {
 
     List<ProductoDTO> findByCategoria(Long categoriaId);
 
+    List<ProductoDTO> search(String term);
+
+    List<ProductoDTO> findRecomendados();
+
+    List<ProductoDTO> findDestacados();
+
     ProductoDTO venderProducto(Long productoId, int cantidad);
 
     ProductoDTO agregarStock(Long productoId, int cantidad);

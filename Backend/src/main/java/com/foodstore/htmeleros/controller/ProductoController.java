@@ -2,6 +2,7 @@ package com.foodstore.htmeleros.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodstore.htmeleros.dto.CategoriaDTO;
@@ -36,6 +37,21 @@ public class ProductoController {
         return ResponseEntity.ok(productoService.findById(id));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductoDTO>> search(@RequestParam("q") String query) {
+        return ResponseEntity.ok(productoService.search(query));
+    }
+
+    @GetMapping("/recomendados")
+    public ResponseEntity<List<ProductoDTO>> getRecomendados() {
+        return ResponseEntity.ok(productoService.findRecomendados());
+    }
+
+    @GetMapping("/destacados")
+    public ResponseEntity<List<ProductoDTO>> getDestacados() {
+        return ResponseEntity.ok(productoService.findDestacados());
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductoDTO> create(
             @RequestParam("nombre") String nombre,
@@ -44,7 +60,10 @@ public class ProductoController {
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam(value = "disponible", required = false, defaultValue = "true") Boolean disponible,
+            @RequestParam(value = "coloresActivo", required = false, defaultValue = "false") Boolean coloresActivo,
+            @RequestParam(value = "stockControl", required = false, defaultValue = "true") Boolean stockControl,
             @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestParam(value = "etiquetaIds", required = false) String etiquetaIdsJson,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
     ) {
@@ -54,6 +73,9 @@ public class ProductoController {
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
         dto.setDisponible(disponible != null ? disponible : true);
+        dto.setColoresActivo(coloresActivo != null ? coloresActivo : false);
+        dto.setStockControl(stockControl != null ? stockControl : true);
+        dto.setEtiquetaIds(parseIdList(etiquetaIdsJson));
 
         CategoriaDTO catDto = new CategoriaDTO();
         catDto.setId(categoriaId);
@@ -75,7 +97,10 @@ public class ProductoController {
             @RequestParam("categoriaId") Long categoriaId,
             @RequestParam(value = "descripcion", required = false) String descripcion,
             @RequestParam(value = "disponible", required = false) Boolean disponible,
+            @RequestParam(value = "coloresActivo", required = false) Boolean coloresActivo,
+            @RequestParam(value = "stockControl", required = false) Boolean stockControl,
             @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestParam(value = "etiquetaIds", required = false) String etiquetaIdsJson,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes,
             @RequestParam(value = "imagenesEliminarIds", required = false) String imagenesEliminarIds
@@ -87,6 +112,9 @@ public class ProductoController {
         dto.setStock(stock);
         dto.setDescripcion(descripcion);
         dto.setDisponible(disponible);
+        dto.setColoresActivo(coloresActivo);
+        dto.setStockControl(stockControl);
+        dto.setEtiquetaIds(parseIdList(etiquetaIdsJson));
 
         CategoriaDTO catDto = new CategoriaDTO();
         catDto.setId(categoriaId);

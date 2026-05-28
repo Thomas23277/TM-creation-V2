@@ -1,7 +1,9 @@
 package com.foodstore.htmeleros.entity;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,32 +47,33 @@ public class Producto {
  @Column(nullable = false)
  private boolean disponible = true;
 
- // Usamos EAGER para que al listar productos en el Home/Admin
- // la categoría cargue siempre sin errores de sesión de Hibernate
- @ManyToOne(fetch = FetchType.EAGER)
- @JoinColumn(name = "categoria_id", referencedColumnName = "id", nullable = false)
- private Categoria categoria;
+ @Column(name = "colores_activo", nullable = false)
+ private boolean coloresActivo = false;
 
- @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
- @OrderBy("orden ASC")
- private List<ProductoImagen> imagenes = new ArrayList<>();
+ @Column(name = "stock_control", nullable = false)
+ private boolean stockControl = true;
 
- @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
- private List<Variante> variantes = new ArrayList<>();
+ @ManyToMany(fetch = FetchType.LAZY)
+ @JoinTable(
+  name = "producto_etiqueta",
+  joinColumns = @JoinColumn(name = "producto_id"),
+  inverseJoinColumns = @JoinColumn(name = "etiqueta_id")
+ )
+ private Set<Etiqueta> etiquetas = new HashSet<>();
 
  // ============================================================
  // LÓGICA DE NEGOCIO (STOCK)
  // ============================================================
 
- public void reducirStock(int cantidad) {
-  if (cantidad <= 0) {
-   throw new IllegalArgumentException("La cantidad a reducir debe ser mayor a 0");
+  public void reducirStock(int cantidad) {
+   if (cantidad <= 0) {
+    throw new IllegalArgumentException("La cantidad a reducir debe ser mayor a 0");
+   }
+   if (stockControl && this.stock < cantidad) {
+    throw new IllegalStateException("Stock insuficiente para el producto: " + this.nombre);
+   }
+   this.stock -= cantidad;
   }
-  if (this.stock < cantidad) {
-   throw new IllegalStateException("Stock insuficiente para el producto: " + this.nombre);
-  }
-  this.stock -= cantidad;
- }
 
  public void aumentarStock(int cantidad) {
   if (cantidad <= 0) {
@@ -86,7 +89,7 @@ public class Producto {
  @PrePersist
  @PreUpdate
  public void validarConsistencia() {
-  if (this.stock < 0) {
+  if (stockControl && this.stock < 0) {
    throw new IllegalStateException("El stock no puede ser un valor negativo");
   }
   if (this.precio < 0) {

@@ -1,6 +1,7 @@
 package com.foodstore.htmeleros.dto;
 
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,6 +25,10 @@ public class ProductoDTO {
     // genere getDisponible() y setDisponible() correctamente.
     private Boolean disponible = true;
 
+    private Boolean coloresActivo = false;
+
+    private Boolean stockControl = true;
+
     private CategoriaDTO categoria;
 
     // Campo extra necesario para capturar el ID desde el FormData del Admin
@@ -35,6 +40,8 @@ public class ProductoDTO {
 
     private List<VarianteDTO> variantes;
     private List<ProductoImagenDTO> imagenes;
+    private Set<EtiquetaDTO> etiquetas;
+    private List<Long> etiquetaIds;
 
     /**
      * Helper manual por si tu IDE o compilador sigue
