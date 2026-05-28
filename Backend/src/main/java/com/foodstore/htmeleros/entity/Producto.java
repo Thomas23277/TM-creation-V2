@@ -53,6 +53,17 @@ public class Producto {
  @Column(name = "stock_control", nullable = false)
  private boolean stockControl = true;
 
+ @ManyToOne(fetch = FetchType.EAGER)
+ @JoinColumn(name = "categoria_id", referencedColumnName = "id", nullable = false)
+ private Categoria categoria;
+
+ @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+ @OrderBy("orden ASC")
+ private List<ProductoImagen> imagenes = new ArrayList<>();
+
+ @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+ private List<Variante> variantes = new ArrayList<>();
+
  @ManyToMany(fetch = FetchType.LAZY)
  @JoinTable(
   name = "producto_etiqueta",
