@@ -255,7 +255,7 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public List<ProductoDTO> findRecomendados() {
         return productoRepository.findTop6ByDisponibleTrueOrderByIdDesc().stream()
-                .filter(p -> !p.getStockControl() || p.getStock() > 0)
+                .filter(p -> !p.isStockControl() || p.getStock() > 0)
                 .map(ProductoMapper::toDTO)
                 .toList();
     }
@@ -268,7 +268,7 @@ public class ProductoServiceImpl implements ProductoService {
             for (Long id : topIds) {
                 if (result.size() >= 6) break;
                 productoRepository.findById(id).ifPresent(p -> {
-                    if (p.getDisponible() && (!p.getStockControl() || p.getStock() > 0)) {
+                    if (p.isDisponible() && (!p.isStockControl() || p.getStock() > 0)) {
                         result.add(p);
                     }
                 });
@@ -277,7 +277,7 @@ public class ProductoServiceImpl implements ProductoService {
         // Fill remaining with newest available if less than 6
         if (result.size() < 6) {
             List<Producto> fallback = productoRepository.findTop6ByDisponibleTrueOrderByIdDesc().stream()
-                    .filter(p -> !p.getStockControl() || p.getStock() > 0)
+                .filter(p -> !p.isStockControl() || p.getStock() > 0)
                     .filter(p -> !result.contains(p))
                     .limit(6 - result.size())
                     .toList();
