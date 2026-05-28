@@ -64,6 +64,9 @@ public class Producto {
  @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
  private List<Variante> variantes = new ArrayList<>();
 
+ @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+ private List<ColorDisponible> colores = new ArrayList<>();
+
  @ManyToMany(fetch = FetchType.LAZY)
  @JoinTable(
   name = "producto_etiqueta",

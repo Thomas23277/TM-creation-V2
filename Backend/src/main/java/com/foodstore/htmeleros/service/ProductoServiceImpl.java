@@ -5,9 +5,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import com.foodstore.htmeleros.dto.ColorDisponibleDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.entity.Categoria;
+import com.foodstore.htmeleros.entity.ColorDisponible;
 import com.foodstore.htmeleros.entity.Etiqueta;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.ProductoImagen;
@@ -41,7 +43,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes) {
+    public ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<ColorDisponibleDTO> colores) {
         if (dto.getCategoria() == null && dto.getCategoriaId() == null) {
             throw new IllegalArgumentException("El ID de la categoría es obligatorio");
         }
@@ -86,6 +88,16 @@ public class ProductoServiceImpl implements ProductoService {
             }
         }
 
+        if (colores != null) {
+            for (ColorDisponibleDTO cDto : colores) {
+                ColorDisponible c = new ColorDisponible();
+                c.setNombre(cDto.getNombre());
+                c.setColorHex(cDto.getColorHex());
+                c.setProducto(producto);
+                producto.getColores().add(c);
+            }
+        }
+
         if (dto.getEtiquetaIds() != null && !dto.getEtiquetaIds().isEmpty()) {
             producto.setEtiquetas(new HashSet<>(etiquetaRepository.findAllById(dto.getEtiquetaIds())));
         }
@@ -124,7 +136,7 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional
-    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<Long> imagenesEliminarIds) {
+    public ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<ColorDisponibleDTO> colores, List<Long> imagenesEliminarIds) {
         Producto existente = productoRepository.findById(dto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
 
@@ -160,6 +172,17 @@ public class ProductoServiceImpl implements ProductoService {
                 v.setColorHex(vDto.getColorHex());
                 v.setProducto(existente);
                 existente.getVariantes().add(v);
+            }
+        }
+
+        existente.getColores().clear();
+        if (colores != null) {
+            for (ColorDisponibleDTO cDto : colores) {
+                ColorDisponible c = new ColorDisponible();
+                c.setNombre(cDto.getNombre());
+                c.setColorHex(cDto.getColorHex());
+                c.setProducto(existente);
+                existente.getColores().add(c);
             }
         }
 

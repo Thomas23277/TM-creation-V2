@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.foodstore.htmeleros.dto.CategoriaDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.ColorDisponibleDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
 import com.foodstore.htmeleros.service.ProductoService;
 import org.springframework.http.HttpStatus;
@@ -63,6 +64,7 @@ public class ProductoController {
             @RequestParam(value = "coloresActivo", required = false, defaultValue = "false") Boolean coloresActivo,
             @RequestParam(value = "stockControl", required = false, defaultValue = "true") Boolean stockControl,
             @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestParam(value = "colores", required = false) String coloresJson,
             @RequestParam(value = "etiquetaIds", required = false) String etiquetaIdsJson,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes
@@ -82,9 +84,10 @@ public class ProductoController {
         dto.setCategoria(catDto);
 
         List<VarianteDTO> variantes = parseVariantes(variantesJson);
+        List<ColorDisponibleDTO> colores = parseColores(coloresJson);
         List<MultipartFile> todasLasImagenes = combinarImagenes(imagen, imagenes);
 
-        ProductoDTO saved = productoService.save(dto, imagen, todasLasImagenes, variantes);
+        ProductoDTO saved = productoService.save(dto, imagen, todasLasImagenes, variantes, colores);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
@@ -100,6 +103,7 @@ public class ProductoController {
             @RequestParam(value = "coloresActivo", required = false) Boolean coloresActivo,
             @RequestParam(value = "stockControl", required = false) Boolean stockControl,
             @RequestParam(value = "variantes", required = false) String variantesJson,
+            @RequestParam(value = "colores", required = false) String coloresJson,
             @RequestParam(value = "etiquetaIds", required = false) String etiquetaIdsJson,
             @RequestPart(value = "imagen", required = false) MultipartFile imagen,
             @RequestPart(value = "imagenes", required = false) List<MultipartFile> imagenes,
@@ -121,10 +125,11 @@ public class ProductoController {
         dto.setCategoria(catDto);
 
         List<VarianteDTO> variantes = parseVariantes(variantesJson);
+        List<ColorDisponibleDTO> colores = parseColores(coloresJson);
         List<MultipartFile> todasLasImagenes = combinarImagenes(imagen, imagenes);
         List<Long> idsAEliminar = parseIdList(imagenesEliminarIds);
 
-        ProductoDTO updated = productoService.update(dto, imagen, todasLasImagenes, variantes, idsAEliminar);
+        ProductoDTO updated = productoService.update(dto, imagen, todasLasImagenes, variantes, colores, idsAEliminar);
         return ResponseEntity.ok(updated);
     }
 
@@ -140,6 +145,15 @@ public class ProductoController {
             return objectMapper.readValue(json, new TypeReference<List<VarianteDTO>>() {});
         } catch (Exception e) {
             throw new IllegalArgumentException("Formato inválido para variantes: " + e.getMessage());
+        }
+    }
+
+    private List<ColorDisponibleDTO> parseColores(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<ColorDisponibleDTO>>() {});
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Formato inválido para colores: " + e.getMessage());
         }
     }
 

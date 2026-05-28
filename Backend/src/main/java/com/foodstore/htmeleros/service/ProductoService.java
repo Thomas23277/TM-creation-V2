@@ -2,6 +2,7 @@ package com.foodstore.htmeleros.service;
 
 import java.util.List;
 import com.foodstore.htmeleros.dto.ProductoDTO;
+import com.foodstore.htmeleros.dto.ColorDisponibleDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,9 +12,9 @@ public interface ProductoService {
 
     ProductoDTO findById(Long id);
 
-    ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes);
+    ProductoDTO save(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<ColorDisponibleDTO> colores);
 
-    ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<Long> imagenesEliminarIds);
+    ProductoDTO update(ProductoDTO dto, MultipartFile imagen, List<MultipartFile> imagenesAdicionales, List<VarianteDTO> variantes, List<ColorDisponibleDTO> colores, List<Long> imagenesEliminarIds);
 
     void deleteById(Long id);
 

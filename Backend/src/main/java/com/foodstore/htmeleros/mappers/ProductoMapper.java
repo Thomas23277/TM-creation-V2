@@ -2,10 +2,12 @@ package com.foodstore.htmeleros.mappers;
 
 import java.util.Collections;
 import java.util.List;
+import com.foodstore.htmeleros.dto.ColorDisponibleDTO;
 import com.foodstore.htmeleros.dto.EtiquetaDTO;
 import com.foodstore.htmeleros.dto.ProductoDTO;
 import com.foodstore.htmeleros.dto.ProductoImagenDTO;
 import com.foodstore.htmeleros.dto.VarianteDTO;
+import com.foodstore.htmeleros.entity.ColorDisponible;
 import com.foodstore.htmeleros.entity.Etiqueta;
 import com.foodstore.htmeleros.entity.Producto;
 import com.foodstore.htmeleros.entity.Categoria;
@@ -44,6 +46,12 @@ public class ProductoMapper {
         if (producto.getVariantes() != null) {
             dto.setVariantes(producto.getVariantes().stream()
                     .map(v -> new VarianteDTO(v.getId(), v.getNombre(), v.getPrecio(), v.getColorHex()))
+                    .toList());
+        }
+
+        if (producto.getColores() != null) {
+            dto.setColores(producto.getColores().stream()
+                    .map(c -> new ColorDisponibleDTO(c.getId(), c.getNombre(), c.getColorHex()))
                     .toList());
         }
 

@@ -7,10 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductoDTO {
 
     private Long id;
@@ -39,6 +42,7 @@ public class ProductoDTO {
     private Long totalResenas = 0L;
 
     private List<VarianteDTO> variantes;
+    private List<ColorDisponibleDTO> colores;
     private List<ProductoImagenDTO> imagenes;
     private Set<EtiquetaDTO> etiquetas;
     private List<Long> etiquetaIds;
