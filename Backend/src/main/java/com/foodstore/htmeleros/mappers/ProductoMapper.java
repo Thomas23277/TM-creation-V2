@@ -51,7 +51,7 @@ public class ProductoMapper {
 
         if (producto.getColores() != null) {
             dto.setColores(producto.getColores().stream()
-                    .map(c -> new ColorDisponibleDTO(c.getId(), c.getNombre(), c.getColorHex()))
+                    .map(c -> new ColorDisponibleDTO(c.getId(), c.getNombre(), c.getColorHex(), c.getUrlImagen()))
                     .toList());
         }
 

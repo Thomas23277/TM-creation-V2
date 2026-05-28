@@ -93,6 +93,7 @@ public class ProductoServiceImpl implements ProductoService {
                 ColorDisponible c = new ColorDisponible();
                 c.setNombre(cDto.getNombre());
                 c.setColorHex(cDto.getColorHex());
+                c.setUrlImagen(cDto.getUrlImagen());
                 c.setProducto(producto);
                 producto.getColores().add(c);
             }
@@ -181,6 +182,7 @@ public class ProductoServiceImpl implements ProductoService {
                 ColorDisponible c = new ColorDisponible();
                 c.setNombre(cDto.getNombre());
                 c.setColorHex(cDto.getColorHex());
+                c.setUrlImagen(cDto.getUrlImagen());
                 c.setProducto(existente);
                 existente.getColores().add(c);
             }

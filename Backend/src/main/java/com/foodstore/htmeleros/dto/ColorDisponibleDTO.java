@@ -14,4 +14,5 @@ public class ColorDisponibleDTO {
     private Long id;
     private String nombre;
     private String colorHex;
+    private String urlImagen;
 }

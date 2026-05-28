@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="icon" type="image/jpeg" href="/favicon-tmcreation.jpeg">
+  
+  <title>Admin • TM Creation</title>
+  
+  <script type="module" crossorigin src="/assets/api-BwTScyzt.js"></script>
+  <script type="module" crossorigin src="/assets/auth-ieWdpgp-.js"></script>
+  <script type="module" crossorigin src="/assets/adminHome-B88sw8AN.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/adminHome-D-1cP931.css">
+  <link rel="stylesheet" crossorigin href="/assets/styles-IZuPY9Um.css">
+</head>
+
+<body>
+
+<div id="admin-app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <h2>TM Creation</h2>
+      <small>Panel Administrativo</small>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn active" data-view="dashboard">📊 Dashboard</button>
+      <button class="nav-btn" data-view="categories">📂 Categorías</button>
+      <button class="nav-btn" data-view="products">📦 Productos</button>
+      <button class="nav-btn" data-view="orders">🧾 Pedidos</button>
+      <button class="nav-btn" data-view="users">👥 Usuarios</button>
+      <button class="nav-btn" data-view="reviews">📝 Reseñas e Imágenes</button>
+      <button class="nav-btn" data-view="etiquetas">🏷️ Etiquetas</button>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div id="admin-info" class="user-info">
+        <div id="admin-name" class="admin-name">Administrador</div>
+        <div id="admin-email" class="admin-email muted">correo@admin.com</div>
+      </div>
+      <button id="logoutBtn" class="btn-logout">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay"></div>
+
+  <main class="main">
+    <header class="header">
+      <div class="header-left">
+        <button id="menu-toggle" class="hamburger">☰</button>
+        <h1 id="page-title">Dashboard</h1>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div id="metric-products" class="metric-value">0</div>
+          <div class="metric-label">Productos Activos</div>
+        </div>
+        <div class="metric">
+          <div id="metric-categories" class="metric-value">0</div>
+          <div class="metric-label">Categorías Activas</div>
+        </div>
+        <div class="metric">
+          <div id="metric-orders" class="metric-value">0</div>
+          <div class="metric-label">Total Pedidos</div>
+        </div>
+      </div>
+    </header>
+
+    <section class="content">
+      <div id="view-dashboard" class="view active">
+        <div class="section-header">
+          <h2>Bienvenido, administrador</h2>
+          <p>Desde aquí puedes gestionar productos, categorías y pedidos.</p>
+        </div>
+
+        <div class="quick-actions">
+          <button class="quick-action" data-view="products">
+            <span class="qa-icon">📦</span>
+            <span class="qa-label">Nuevo Producto</span>
+          </button>
+          <button class="quick-action" data-view="categories">
+            <span class="qa-icon">📂</span>
+            <span class="qa-label">Nueva Categoría</span>
+          </button>
+          <button class="quick-action" data-view="orders">
+            <span class="qa-icon">🧾</span>
+            <span class="qa-label">Ver Pedidos</span>
+          </button>
+          <button class="quick-action" data-view="reviews">
+            <span class="qa-icon">📝</span>
+            <span class="qa-label">Reseñas</span>
+          </button>
+        </div>
+
+        <div class="dashboard-cards">
+          <div class="dashboard-card">
+            <h3>Productos (Activos)</h3>
+            <p id="card-products">0</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Categorías (Activas)</h3>
+            <p id="card-categories">0</p>
+          </div>
+          <div class="dashboard-card">
+            <h3>Total Pedidos</h3>
+            <p id="card-orders">0</p>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Estado de Pedidos</h3>
+            <div class="doughnut-wrapper" id="doughnut-wrapper">
+              <svg class="doughnut-svg" viewBox="0 0 120 120" id="doughnut-svg">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#1e293b" stroke-width="20" />
+              </svg>
+              <div class="doughnut-center" id="doughnut-center">0</div>
+            </div>
+            <div class="doughnut-legend" id="doughnut-legend"></div>
+            <div class="chart-skeleton" id="doughnut-skeleton">
+              <div class="sk-circ"></div>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Productos por Categoría</h3>
+            <div class="bar-chart" id="bar-chart"></div>
+            <div class="chart-skeleton" id="bar-skeleton">
+              <div class="sk-bar"></div><div class="sk-bar"></div><div class="sk-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="recent-section">
+          <h3>Últimos Pedidos</h3>
+          <div id="recent-orders" class="recent-orders"><p class="muted">Cargando...</p></div>
+        </div>
+      </div>
+
+      <div id="view-categories" class="view">
+        <div class="section-header"><h2>Gestión de Categorías</h2></div>
+        
+        <form id="cat-form" class="panel-form" enctype="multipart/form-data">
+          <input type="hidden" id="cat-id" />
+          <div class="form-grid-admin">
+              <div class="field">
+                <label>Nombre de Categoría</label>
+                <input id="cat-nombre" placeholder="Ej. Muñecos, Soportes..." required />
+              </div>
+              <div class="field">
+                <label>Imagen</label>
+                <input id="cat-file" type="file" accept="image/*" />
+                <div id="cat-img-preview" class="img-preview-box"></div>
+              </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar Categoría</button>
+            <button type="button" id="cat-clear" class="btn-secondary">Limpiar</button>
+          </div>
+        </form>
+        
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="categories-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-products" class="view">
+        <div class="section-header"><h2>Gestión de Productos</h2></div>
+        
+        <form id="prod-form" class="panel-form" enctype="multipart/form-data">
+          <input type="hidden" id="prod-id" />
+          
+          <div class="form-grid-admin">
+            <div class="field"><label>Nombre del Producto</label><input id="prod-nombre" placeholder="Ej. Dragón Articulable" required /></div>
+            <div class="field"><label>Precio ($)</label><input id="prod-precio" type="number" step="0.01" min="0" required /></div>
+            <div class="field"><label>Stock Disponible</label><input id="prod-stock" type="number" min="0" required /></div>
+            <div class="field">
+              <label>Categoría</label>
+              <select id="prod-categoria"><option value="">Seleccionar categoría</option></select>
+            </div>
+          </div>
+
+          <div class="field-toggle">
+            <label>Producto disponible para la venta</label>
+            <label class="switch">
+              <input type="checkbox" id="prod-disponible" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="field-toggle">
+            <label>Colores por variante
+              <span class="field-hint" style="display:inline;margin-left:6px;font-size:0.75rem;">Muestra círculos de color en los tamaños</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="colores-activo-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="field-toggle">
+            <label>Colores disponibles del producto
+              <span class="field-hint" style="display:inline;margin-left:6px;font-size:0.75rem;">Selector de colores independiente en la ficha del producto</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="colores-propios-toggle">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="colores-propios-manager" style="display:none;margin-top:12px;">
+            <label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px;">Colores disponibles</label>
+            <div id="colores-propios-container"></div>
+            <button type="button" id="add-color-propio" class="btn-secondary btn-sm" style="margin-top:8px;">+ Agregar color</button>
+          </div>
+
+          <div class="field-toggle">
+            <label>Control de stock
+              <span class="field-hint" style="display:inline;margin-left:6px;font-size:0.75rem;">Desactivar para productos bajo pedido</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="stock-control-toggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="form-grid-admin">
+              <div class="field">
+                <label>Imágenes del Producto</label>
+                <input id="prod-file" type="file" accept="image/*" multiple />
+                <p class="field-hint">La primera imagen será la principal. Podés seleccionar varias.</p>
+                <div id="prod-images-preview" class="img-preview-box"></div>
+                <div id="prod-img-preview" class="img-preview-box"></div>
+              </div>
+    
+              <div class="field">
+                <label>Descripción (Opcional)</label>
+                <textarea id="prod-descripcion" rows="5" placeholder="Detalles del producto..."></textarea>
+              </div>
+          </div>
+
+          <div class="variants-section">
+            <label>Tamaños y Precios</label>
+            <p class="field-hint">Si solo hay un tamaño, se usa el precio por defecto. Agregá variantes para que el cliente elija.</p>
+            <div id="variants-container"></div>
+            <button type="button" id="add-variant" class="btn-secondary btn-sm">+ Agregar tamaño</button>
+          </div>
+
+          <div class="field">
+            <label>Etiquetas</label>
+            <div id="etiquetas-select" class="tags-select"></div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" id="btn-save-prod">Guardar Producto</button>
+            <button type="button" id="prod-clear" class="btn-secondary">Limpiar Formulario</button>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Tamaños</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="view-orders" class="view">
+        <div class="section-header">
+          <h2>Gestión de Pedidos</h2>
+          <div class="orders-header-actions">
+            <button id="clear-orders-btn" class="btn-danger-outline">
+              <span class="clear-icon">🗑️</span> Limpiar todos los pedidos
+            </button>
+          </div>
+        </div>
+        <div id="orders-container"></div>
+      </div>
+
+      <div id="view-users" class="view">
+        <div class="section-header">
+          <h2>Gestión de Usuarios</h2>
+          <p>Listado completo de usuarios registrados.</p>
+        </div>
+
+        <div class="users-layout">
+          <div class="users-list-section">
+            <div class="table-responsive">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th>Pedidos</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="user-detail-panel" id="user-detail-panel" style="display:none;">
+            <div class="user-detail-header">
+              <h3 id="detail-user-name"></h3>
+              <button class="btn-close-detail" id="close-user-detail">✕</button>
+            </div>
+            <div class="user-detail-body" id="user-detail-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-reviews" class="view">
+        <div class="section-header"><h2>Gestión de Reseñas y Promociones</h2></div>
+        <iframe src="../reviews/reviews.html" style="width:100%; min-height: 600px; border:none; border-radius:12px;"></iframe>
+      </div>
+
+      <div id="view-etiquetas" class="view">
+        <div class="section-header"><h2>Gestión de Etiquetas</h2></div>
+
+        <form id="etiqueta-form" class="panel-form">
+          <input type="hidden" id="etiqueta-id" />
+          <div class="form-grid-admin">
+            <div class="field">
+              <label>Nombre</label>
+              <input id="etiqueta-nombre" placeholder="Ej. Nuevo, Recomendado, Promo..." required />
+            </div>
+            <div class="field">
+              <label>Color de fondo</label>
+              <input id="etiqueta-color" type="color" value="#2dd4bf" />
+            </div>
+            <div class="field" style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+              <label class="switch">
+                <input type="checkbox" id="etiqueta-visible" checked />
+                <span class="slider"></span>
+              </label>
+              <span>Visible en tienda</span>
+            </div>
+            <div class="field" style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+              <label class="switch">
+                <input type="checkbox" id="etiqueta-interna" />
+                <span class="slider"></span>
+              </label>
+              <span>Interna (solo para búsqueda)</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Guardar Etiqueta</button>
+            <button type="button" id="etiqueta-clear" class="btn-secondary">Limpiar</button>
+          </div>
+        </form>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Color</th>
+                <th>Visible</th>
+                <th>Interna</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="etiquetas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="clear-pin-overlay" class="pin-overlay" style="display:none;">
+  <div class="pin-modal">
+    <div class="pin-modal-header">
+      <h3>🔐 Eliminar todos los pedidos</h3>
+      <p>Esta acción es irreversible. Ingresá el PIN de seguridad para continuar.</p>
+    </div>
+    <div class="pin-input-group">
+      <input type="password" id="pin-input" class="pin-input" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="• • • •" />
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-actions">
+      <button id="pin-confirm-btn" class="btn-danger-pin">🗑️ Eliminar todo</button>
+      <button id="pin-cancel-btn" class="btn-secondary-pin">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+</body>
+</html>

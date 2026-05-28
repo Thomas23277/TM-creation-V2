@@ -24,6 +24,9 @@ public class ColorDisponible {
   @Column(name = "color_hex", nullable = false, length = 7)
   private String colorHex;
 
+  @Column(name = "url_imagen", length = 500)
+  private String urlImagen;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "producto_id", nullable = false)
   private Producto producto;

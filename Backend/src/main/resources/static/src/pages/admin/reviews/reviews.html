@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script>(function(){var t=localStorage.getItem('tmcreation-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionar Reseñas | TM Creation Admin</title>
+  <link rel="icon" type="image/jpeg" href="/favicon-tmcreation.jpeg">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;700;900&display=swap');
+
+    :root {
+      --primary: #2dd4bf;
+      --primary-glow: #14b8a6;
+      --primary-dark: #0f766e;
+      --accent: #6366f1;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --dark-deep: #020617;
+      --dark-surface: #0f172a;
+      --white: #ffffff;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --glass-bg: rgba(15, 23, 42, 0.82);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --glass-heavy: rgba(2, 6, 23, 0.95);
+      --glass-light: rgba(255, 255, 255, 0.05);
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 8px;
+      --shadow-premium: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+      --glow-primary: 0 0 30px rgba(45, 212, 191, 0.35);
+      --anim-speed: 0.3s;
+      --anim-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    html { height: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: radial-gradient(circle at top center, #0f172a 0%, var(--dark-deep) 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+
+    ::-webkit-scrollbar-track { background: var(--dark-deep); }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(45, 212, 191, 0.3);
+      border-radius: 10px;
+      border: 2px solid var(--dark-deep);
+    }
+
+    ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+    ::selection { background: var(--primary); color: var(--dark-deep); }
+
+    .admin-header {
+      width: 100%;
+      background: var(--glass-bg);
+      backdrop-filter: blur(25px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .admin-header .logo {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #fff 30%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .back-btn {
+      background: var(--glass-light);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      padding: 8px 20px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all var(--anim-speed) ease;
+      font-family: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: translateX(-3px);
+      box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+    }
+
+    .admin-content {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 30px 80px;
+      flex: 1;
+    }
+
+    .admin-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 35px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab {
+      padding: 14px 28px;
+      background: var(--glass-light);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 700;
+      font-family: inherit;
+      transition: all var(--anim-speed) ease;
+    }
+
+    .admin-tab:hover {
+      background: var(--glass-bg);
+      color: var(--text-main);
+      border-color: var(--primary);
+    }
+
+    .admin-tab.active {
+      background: var(--primary);
+      color: var(--dark-deep);
+      border-color: var(--primary);
+      box-shadow: 0 4px 15px rgba(45, 212, 191, 0.3);
+    }
+
+    .admin-section { display: none; }
+
+    .admin-section.active { display: block; }
+
+    .admin-section h2 {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--white);
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #fff 40%, var(--primary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .reviews-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+    }
+
+    .reviews-table th {
+      padding: 18px 20px;
+      text-align: left;
+      background: rgba(0,0,0,0.3);
+      color: var(--primary);
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .reviews-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--glass-border);
+      font-size: 0.92rem;
+      color: var(--text-main);
+    }
+
+    .reviews-table tr:last-child td { border-bottom: none; }
+
+    .reviews-table tr:hover td { background: rgba(255,255,255,0.04); }
+
+    .star-display {
+      color: #fbbf24;
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: 1px solid rgba(239,68,68,0.4);
+      color: #f87171;
+      padding: 8px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    .btn-delete:hover {
+      background: #ef4444;
+      color: white;
+      box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      background: var(--glass-bg);
+      border: 1px dashed var(--glass-border);
+      border-radius: var(--radius-lg);
+      margin-top: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .promo-info {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+      padding: 14px 20px;
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.2);
+      border-left: 4px solid var(--primary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      line-height: 1.5;
+    }
+
+    .btn-add {
+      background: var(--primary);
+      color: var(--dark-deep);
+      border: none;
+      padding: 14px 30px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      transition: all var(--anim-speed) ease;
+    }
+
+    .btn-add:hover {
+      background: #14b8a6;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 212, 191, 0.4);
+    }
+
+    .promo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .promo-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      transition: all var(--anim-speed) ease;
+    }
+
+    .promo-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .promo-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+    }
+
+    .promo-card h4 {
+      margin: 0 0 10px 0;
+      font-size: 1.2rem;
+      color: var(--white);
+      font-weight: 800;
+    }
+
+    .promo-card p {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      margin: 0 0 18px 0;
+      line-height: 1.6;
+    }
+
+    .promo-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-toggle {
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: 0.3s;
+    }
+
+    .btn-toggle.active {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .btn-toggle.active:hover { background: rgba(16, 185, 129, 0.15); }
+
+    .btn-toggle.inactive {
+      border-color: var(--text-muted);
+      color: var(--text-muted);
+    }
+
+    .btn-toggle.inactive:hover { background: rgba(148, 163, 184, 0.1); }
+
+    .btn-edit {
+      background: transparent;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: all 0.3s;
+    }
+
+    .btn-edit:hover {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .promo-form {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 28px;
+      display: none;
+      border: 1px solid var(--glass-border);
+    }
+
+    .promo-form.show { display: block; }
+
+    .promo-form h3 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: var(--white);
+    }
+
+    .promo-form input, .promo-form textarea {
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color var(--anim-speed) ease, box-shadow var(--anim-speed) ease;
+    }
+
+    .promo-form input::placeholder { color: var(--text-muted); }
+
+    .promo-form input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.15);
+    }
+
+    .form-actions { display: flex; gap: 12px; }
+
+    .admin-footer {
+      width: 100%;
+      text-align: center;
+      padding: 30px 20px;
+      background: var(--glass-heavy);
+      border-top: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: auto;
+    }
+
+    @media (max-width: 768px) {
+      .admin-header { padding: 12px 16px; }
+      .admin-header .logo { font-size: 1.1rem; }
+      .back-btn { padding: 6px 14px; font-size: 0.8rem; }
+      .admin-content { padding: 24px 16px 60px; }
+      .admin-tabs { gap: 8px; }
+      .admin-tab {
+        padding: 10px 18px;
+        font-size: 0.85rem;
+        flex: 1;
+        text-align: center;
+      }
+      .admin-section h2 { font-size: 1.3rem; }
+      .reviews-table { display: block; overflow-x: auto; }
+      .reviews-table th, .reviews-table td { padding: 12px 14px; font-size: 0.82rem; }
+      .star-display { font-size: 0.95rem; letter-spacing: 1px; }
+      .btn-delete { padding: 6px 12px; font-size: 0.75rem; }
+      .promo-grid { grid-template-columns: 1fr; }
+      .promo-card { padding: 18px; }
+      .promo-card img { height: 130px; }
+      .promo-card h4 { font-size: 1.05rem; }
+      .promo-actions { flex-wrap: wrap; gap: 8px; }
+      .btn-toggle, .btn-edit, .btn-delete { flex: 1; text-align: center; }
+      .btn-add { width: 100%; justify-content: center; }
+      .promo-form { padding: 20px; }
+      .promo-form h3 { font-size: 1.2rem; }
+      .form-actions { flex-direction: column; }
+      .form-actions button { width: 100%; }
+      .empty-state { padding: 30px 16px; font-size: 0.95rem; }
+    }
+
+    @media (max-width: 480px) {
+      .admin-header { padding: 10px 12px; }
+      .back-btn { padding: 5px 10px; font-size: 0.75rem; }
+      .admin-content { padding: 16px 12px 40px; }
+      .admin-tabs { flex-direction: column; }
+      .admin-tab { width: 100%; }
+      .admin-section h2 { font-size: 1.1rem; }
+      .reviews-table th, .reviews-table td { padding: 8px 10px; font-size: 0.72rem; }
+      .star-display { font-size: 0.85rem; }
+      .promo-card img { height: 100px; }
+      .btn-add { font-size: 0.85rem; padding: 12px 16px; }
+    }
+
+    [data-theme="light"] {
+      --dark-deep: #f8fafc;
+      --dark-surface: #e2e8f0;
+      --white: #0f172a;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(0, 0, 0, 0.1);
+      --glass-heavy: rgba(255, 255, 255, 0.95);
+      --glass-light: rgba(0, 0, 0, 0.04);
+    }
+
+    [data-theme="light"] .admin-header .logo {
+      background: linear-gradient(135deg, #0f172a 30%, #0d9488 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .back-btn {
+      color: var(--text-main);
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/src/pages/admin/reviews/reviews.html-B-T45a7m.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/api-BwTScyzt.js">
+</head>
+<body>
+  <header class="admin-header">
+    <button class="back-btn" onclick="window.location.href='/src/pages/store/home/home.html'">&larr; Volver</button>
+    <span class="logo">TM Creation Admin</span>
+    <div style="width:80px"></div>
+  </header>
+
+  <main class="admin-content">
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="reviews">📝 Reseñas</button>
+      <button class="admin-tab" data-tab="promos">🎉 Promociones</button>
+    </div>
+
+    <section id="reviews-section" class="admin-section active">
+      <h2>Gestionar Reseñas</h2>
+      <div id="reviews-list"></div>
+    </section>
+
+    <section id="promos-section" class="admin-section">
+      <h2>Gestionar Promociones</h2>
+      <p class="promo-info">📐 Imagen recomendada: 1920x600px (proporción 16:5) - Formato JPG o WebP</p>
+      <button class="btn-add" id="add-promo-btn">+ Nueva Promoción</button>
+
+      <div class="promo-form" id="promo-form">
+        <h3 id="form-title">Nueva Promoción</h3>
+        <input type="text" id="promo-titulo" placeholder="Título de la promoción">
+        <input type="file" id="promo-imagen" accept="image/*">
+        <input type="text" id="promo-enlace" placeholder="URL de destino (opcional)">
+        <input type="number" id="promo-orden" placeholder="Orden (0, 1, 2...)" value="0">
+        <div class="form-actions">
+          <button class="btn-add" id="save-promo-btn">Guardar</button>
+          <button class="btn-delete" id="cancel-promo-btn">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="promo-grid" id="promos-list"></div>
+    </section>
+  </main>
+
+  <footer class="admin-footer">
+    TM Creation © 2026 – Panel de Administración
+  </footer>
+
+</body>
+</html>

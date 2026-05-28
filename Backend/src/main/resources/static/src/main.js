@@ -77,19 +77,20 @@ import { getCurrentUser, checkSession } from "./utils/auth";
 // ======================
 const path = window.location.pathname;
 const modules = import.meta.glob([
-    "./pages/auth/login/login.ts",
-    "./pages/auth/register/register.ts",
-    "./pages/store/home/home.ts",
-    "./pages/store/productDetail/productDetail.ts",
-    "./pages/store/cart/cart.ts",
-    "./pages/admin/adminHome/adminHome.ts",
-    "./pages/admin/categories/categories.ts",
-    "./pages/admin/products/products.ts",
-    "./pages/admin/orders/orders.ts",
+    "./pages/auth/login/login.js",
+    "./pages/auth/register/register.js",
+    "./pages/store/home/home.js",
+    "./pages/store/productDetail/productDetail.js",
+    "./pages/store/cart/cart.js",
+    "./pages/admin/adminHome/adminHome.js",
+    "./pages/admin/categories/categories.js",
+    "./pages/admin/products/products.js",
+    "./pages/admin/orders/orders.js",
 ]);
 for (const filePath in modules) {
-    const normalizedPath = filePath.replace("./pages", "/src/pages");
-    if (path.includes(normalizedPath)) {
+    const normalizedPath = filePath.replace("./pages", "/src/pages").replace(/\.[^/.]+$/, "");
+    const currentPath = path.replace(/\.[^/.]+$/, "");
+    if (currentPath.includes(normalizedPath)) {
         console.log(`✅ Cargando módulo dinámico: ${filePath}`);
         modules[filePath]();
         break;
